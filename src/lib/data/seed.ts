@@ -699,6 +699,12 @@ export function buildSeedGraph(now: Date = new Date()): SeedGraph {
       language: seed.language,
       trend: seed.trend,
       utilityType: seed.utilityType,
+      // The demo graph predates any provider, and inventing provenance for
+      // fictional numbers would be exactly the fabrication this app forbids.
+      competitionIndex: null,
+      competitionLevel: null,
+      metricsProvider: null,
+      metricsFetchedAt: null,
       opportunityScore: breakdown.total,
       status: seed.status,
       source: "SEED",
@@ -713,6 +719,9 @@ export function buildSeedGraph(now: Date = new Date()): SeedGraph {
 
   const serpResults: SerpResult[] = SERP_RESULTS.map((seed) => ({
     ...seed,
+    source: "MANUAL",
+    provider: null,
+    fetchedAt: null,
     createdAt: iso(now, 5),
     updatedAt: iso(now, 5),
   }));

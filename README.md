@@ -44,7 +44,10 @@ store seeded with fictional opportunities, SERP results, clusters and assets, al
 flagged `DEMO`. No login is required. Data resets when the server restarts, and
 every screen says so.
 
-To run against real persistence, see [Supabase setup](#supabase-setup).
+Demo mode exists for evaluating the product. **The normal path is Supabase** —
+see [Supabase setup](#supabase-setup). A production build without Supabase
+configured shows a persistent warning banner on every screen, because everything
+you create in that state is lost on the next restart.
 
 ```bash
 npm run check        # lint + typecheck + tests
@@ -59,8 +62,9 @@ npm start            # production server
 ```
 src/
   app/
-    (app)/                 authenticated shell — dashboard, opportunities,
-                           pipeline, portfolio, clusters, settings
+    (app)/                 authenticated shell — dashboard, research,
+                           opportunities, pipeline, portfolio, clusters,
+                           settings
     actions/               server actions (the only write path)
     login/                 Supabase email/password auth
   components/              UI, grouped by feature; ui/ holds shadcn primitives
@@ -69,6 +73,7 @@ src/
     scoring/               demand normalisation, scoring engine, SERP summary
     engine/                next-best-action, checkpoints, build-pack generator
     providers/             external-provider interfaces + adapters
+      dataforseo/          DataForSEO client, wire-shape mapping, locations
     data/                  Store interface, Supabase + in-memory adapters, seed
     csv/                   RFC 4180 parser and import mapper
 supabase/migrations/       schema and RLS
@@ -105,8 +110,14 @@ activity log.
 | --- | --- | --- |
 | `NEXT_PUBLIC_SUPABASE_URL` | for persistence | Supabase project URL. Without it the app runs in demo mode. |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | for persistence | Supabase anon/publishable key. `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` is also accepted. |
+| `DATAFORSEO_LOGIN` | for keyword/SERP data | DataForSEO **API** login from [app.dataforseo.com/api-access](https://app.dataforseo.com/api-access) — not your dashboard account password. |
+| `DATAFORSEO_PASSWORD` | for keyword/SERP data | DataForSEO API password from the same page. |
 | `ANTHROPIC_API_KEY` | for AI analysis | Enables the Claude provider. Without it the AI tab shows a configuration state. |
 | `ANTHROPIC_MODEL` | no | Model override. Defaults to `claude-opus-5`. |
+
+Both DataForSEO variables must be set together, and DataForSEO must then be
+selected under **Settings → Providers** for the keyword and/or SERP slot. Live
+calls consume DataForSEO credits.
 
 Copy `.env.example` to `.env.local` to start.
 
@@ -118,20 +129,46 @@ provider's real configuration status by inspecting the running process.
 
 ## Supabase setup
 
-1. Create a project at [supabase.com](https://supabase.com).
+Supabase provides both authentication and durable storage, and is the intended
+way to run this. Demo mode is preserved as a fallback, but a production instance
+without Supabase keeps every record in one process's memory.
+
+1. Create a project at [supabase.com](https://supabase.com) named **Utility
+   Factory**. Pick the region closest to you — **region cannot be changed after
+   creation**.
 2. Apply the migrations, in order:
-   - `supabase/migrations/20260101000000_init.sql` — tables, constraints, indexes,
-     `updated_at` triggers, and a trigger that mirrors new `auth.users` rows into
+   - `20260101000000_init.sql` — tables, constraints, indexes, `updated_at`
+     triggers, and a trigger that mirrors new `auth.users` rows into
      `public.users` and gives them default settings.
-   - `supabase/migrations/20260101000100_rls.sql` — row level security.
+   - `20260101000100_rls.sql` — row level security.
+   - `20260201000000_provider_metrics.sql` — provider-sourced metric columns and
+     provenance (see below).
+   - `20260201000100_harden_functions.sql` — pins `search_path` on the trigger
+     functions and revokes their `EXECUTE` from `anon`/`authenticated`, so the
+     `SECURITY DEFINER` bootstrap function is not reachable over `/rest/v1/rpc`.
 
    With the Supabase CLI: `supabase db push`. Or paste each file into the SQL
-   editor.
-3. Put the project URL and anon key in `.env.local`.
+   editor in that order.
+3. Put the project URL and anon key (Project Settings → API) in `.env.local`.
 4. Start the app, open `/login`, and use **Create the operator account**. The
    trigger provisions your `users` row and default settings.
 5. Optionally load the demo data: run `supabase/seed.sql`. It attaches the demo
-   records to the single existing user and fails loudly if there isn't one.
+   records to the single existing user and fails loudly if there isn't one. Skip
+   this on an instance you intend to use for real work.
+6. Run the Supabase advisors (**Advisors → Security** in the dashboard) after
+   applying migrations. A clean run reports no lints.
+
+### What the provider-metrics migration adds
+
+`opportunities` gains `competition_index`, `competition_level`,
+`metrics_provider` and `metrics_fetched_at`; `serp_results` gains `source`,
+`provider` and `fetched_at`.
+
+Ad competition is stored separately from `keyword_difficulty` on purpose. Google
+Ads `competition_index` measures how contested a keyword is *for advertisers*;
+keyword difficulty measures how hard it is to rank *organically*. Writing one
+into the other would silently relabel a metric as something it is not, so they
+are different columns with different meanings in the UI.
 
 To remove the demo data later:
 
@@ -223,29 +260,122 @@ captured results produces no suggestion at all.
 
 Four interfaces in `src/lib/providers/types.ts`:
 
-| Interface | Supplies |
-| --- | --- |
-| `KeywordProvider` | search volume, difficulty, CPC |
-| `SerpProvider` | ranking results for a keyword |
-| `AIProvider` | structured opportunity analysis |
-| `SearchAnalyticsProvider` | impressions, clicks, CTR, position for live assets |
+| Interface | Supplies | Real adapter |
+| --- | --- | --- |
+| `KeywordProvider` | search volume, difficulty, CPC, ad competition, seed expansion | DataForSEO |
+| `SerpProvider` | organic top 10 for a keyword | DataForSEO |
+| `AIProvider` | structured opportunity analysis | Claude |
+| `SearchAnalyticsProvider` | impressions, clicks, CTR, position for live assets | none yet |
 
 Every provider reports its own `status()` rather than throwing at import time,
 which is what lets the UI render an honest "not configured" state — with the
 required environment variables named — instead of crashing or, far worse,
 substituting a plausible-looking number.
 
-Manual adapters are the default for all four and are deliberately inert: they
+Manual adapters remain the default for all four and are deliberately inert: they
 throw `ProviderNotConfiguredError`, which the UI renders as a configuration
-state. The operator supplies the data by hand or by CSV import. The one real
-adapter shipped is `ClaudeAIProvider`, which uses structured outputs so the model
-cannot return a shape the UI is unprepared for, and guarantees every section —
-including the mandatory "reasons not to build" — is present.
+state. The operator supplies the data by hand or by CSV import.
 
 **Adding a provider** is one file plus one line: implement the interface in
 `src/lib/providers/`, register the factory in `registry.ts`. The Settings screen
 reads its options from that registry, so a new adapter appears automatically with
 its configuration status. Nothing else in the application imports a vendor SDK.
+
+---
+
+## DataForSEO
+
+The first real external data source. Authentication is HTTP Basic with the API
+login and password from
+[app.dataforseo.com/api-access](https://app.dataforseo.com/api-access) — these
+are distinct from the dashboard account password.
+
+### Endpoints used
+
+| Endpoint | Used by | Supplies |
+| --- | --- | --- |
+| `POST /v3/keywords_data/google_ads/keywords_for_keywords/live` | Research → *Expand seeds* | Related keyword discovery (max 20 seeds/call) plus volume, CPC, competition, monthly history |
+| `POST /v3/keywords_data/google_ads/search_volume/live` | Research → *Look up as typed*, and *Refresh from provider* | Volume, CPC, competition, monthly history for known keywords |
+| `POST /v3/dataforseo_labs/google/bulk_keyword_difficulty/live` | both of the above | Organic keyword difficulty, 0–100 |
+| `POST /v3/serp/google/organic/live/advanced` | SERP tab → *Fetch top 10* | Live Google organic results |
+| `GET /v3/keywords_data/google_ads/locations` | all keyword calls | Country ISO → location code |
+| `GET /v3/serp/google/locations` | SERP calls | Country ISO → location code |
+
+Country and language: the app stores ISO-3166 alpha-2 country codes (`US`, `GB`)
+and ISO language codes (`en`, `de`). Country codes are resolved to DataForSEO
+numeric location codes at call time from the locations endpoints, filtered to
+`location_type = "Country"` so a lookup cannot silently narrow to a region or
+city, and memoised for the life of the process. Language codes pass through.
+
+The Labs difficulty call is **best-effort**: it is billed separately from Keyword
+Planner data, so if the account has no Labs subscription the call fails quietly
+and `keywordDifficulty` stays `null` rather than blocking the volume and CPC the
+account *can* see.
+
+### What DataForSEO fills in, and what stays manual
+
+Filled in automatically:
+
+- search volume, CPC, Google Ads competition index and bucket
+- keyword difficulty (Labs, when subscribed)
+- trend, derived from the reported monthly search history
+- organic top 10: position, domain, URL, title
+
+**Still manual, on purpose:**
+
+- **Low authority** and **new site** flags. No provider in this integration
+  measures either. Fetched SERP rows leave both `null`, and the SERP summariser
+  counts only explicitly-marked rows, so a fetch can never by itself produce a
+  "weak SERP" verdict. These stay a manual judgement until there is a provider
+  worth trusting for them.
+- **Domain authority**, for the same reason.
+- **Page type** (utility / article / directory / …) — the SERP endpoint does not
+  classify pages, so fetched rows default to `OTHER` for you to correct.
+- **Competitor assessment** and notes.
+- All six qualitative sub-scores: SERP weakness, utility fit, monetisation,
+  evergreen, build simplicity, cluster potential.
+- **Asset performance** — impressions, clicks, CTR, position, revenue. Search
+  Console is deliberately not wired up yet; it comes once real utilities are
+  published and there is something to measure.
+
+### Trend derivation
+
+`deriveTrend()` in `src/lib/providers/dataforseo/mapping.ts` computes a trend
+from the monthly volumes the provider actually reported — a computation over
+measured data, not an estimate. Two limits are deliberate:
+
+- Fewer than **12** complete months → `UNKNOWN`.
+- `SEASONAL` requires **24** months. With a single year, a December spike and a
+  keyword genuinely taking off produce the same twelve numbers; claiming
+  seasonality there would assert something the data cannot support. Such a year
+  reports as `RISING`, which is what the window actually shows.
+
+Otherwise the mean of the last 3 months is compared against the preceding 9:
+≥ 1.2× is `RISING`, ≤ 0.8× is `DECLINING`, anything between is `STABLE`. The
+thresholds are named constants, not inline magic numbers.
+
+### Research workflow
+
+**Research** (`/research`) is the seed-to-opportunity path:
+
+1. Enter one or more seeds — `calculator`, `generator`, `converter`, `checker`,
+   `estimator` — up to 20 per search, with country, language and a result cap.
+2. Choose **Expand seeds** (discovery) or **Look up as typed** (price exactly
+   what you entered). Providers that cannot expand fall back to lookup.
+3. Review the candidate table. Every cell is measured or blank; a blank means the
+   provider reported nothing and is never rendered as zero. Keywords you already
+   track are shown, linked, and cannot be selected again.
+4. Tick what is worth tracking and import. Records are created with
+   `source = KEYWORD_PROVIDER`, status `INBOX`, and `metrics_provider` /
+   `metrics_fetched_at` recording where the numbers came from and when.
+
+Imported opportunities score low at first, and that is correct: only the demand
+factor can be filled from provider data. The remaining 80 points are judgements
+you make in the Opportunity detail screen.
+
+Re-fetching a SERP replaces previously fetched rows, leaves hand-entered rows
+alone, and carries any judgement you already recorded against a domain onto the
+new row for that domain — a refresh never silently discards review work.
 
 ---
 
@@ -289,11 +419,21 @@ most:
 
 ## Current limitations
 
-- **Keyword, SERP and Search Analytics providers are manual only.** The
-  interfaces and the registry exist and the UI handles the unconfigured state
-  properly, but no real vendor adapter ships.
+- **Search Analytics is manual only.** The interface and registry entry exist and
+  the UI handles the unconfigured state properly, but no adapter ships. Asset
+  metrics are entered by hand until Search Console is wired up.
+- **Authority signals are not measured anywhere.** Low authority, new site and
+  domain authority remain hand-classified. This is the single biggest gap: SERP
+  weakness carries the heaviest scoring weight, and fetching a SERP gets you the
+  competitor list but not a judgement of it.
 - **Demo mode is not durable.** Without Supabase, data lives in one process's
-  memory and resets on restart. It is intended for evaluation, not for real work.
+  memory and resets on restart. It is intended for evaluation, not for real work,
+  and a production build without Supabase says so on every screen.
+- **DataForSEO calls are synchronous and uncached.** Every research run and every
+  refresh is a live billed call. There is no request cache or cost ceiling in the
+  app; budget limits belong in the DataForSEO dashboard.
+- **Seed expansion is capped at 20 seeds per search** by the upstream Keyword
+  Planner endpoint, and the review table is capped at 200 candidates per run.
 - **Charts are minimal.** Asset history renders as inline SVG sparklines. The
   data model stores full metric history, so a real charting layer can be added
   without touching persistence.
@@ -311,14 +451,18 @@ most:
 
 ## Suggested next integrations
 
-1. **Search Console** (`SearchAnalyticsProvider`) — the highest-value addition by
-   far. Every checkpoint currently depends on hand-entered metrics; automating
-   impressions/clicks/CTR/position turns the portfolio into a live instrument.
-2. **A SERP provider** — SERP weakness carries the heaviest scoring weight and is
-   the most laborious field to fill in by hand. Populate `serp_results` and let
-   the existing suggestion engine do the rest.
-3. **A keyword provider** — automates volume, difficulty and CPC at the top of
-   the funnel, and makes bulk discovery practical.
+1. **Search Console** (`SearchAnalyticsProvider`) — the highest-value addition
+   once the first utilities are live and indexed. Every checkpoint currently
+   depends on hand-entered metrics; automating impressions/clicks/CTR/position
+   turns the portfolio into a live instrument. Deliberately deferred until there
+   is real published traffic to read.
+2. **A domain-authority source** — the missing half of SERP analysis. DataForSEO
+   Labs exposes `rank_info` (`main_domain_rank`, `backlinks`) on some endpoints,
+   and Moz/Majestic sell the metric directly. Until one is wired in, `is_low_authority`
+   and `is_new_site` must stay hand-classified rather than inferred.
+3. **Cached / batched DataForSEO calls** — a short-lived cache on volume lookups,
+   and the task-based (non-`/live`) endpoints for bulk work, would cut credit
+   burn substantially on repeated research.
 4. **Revenue/analytics** — extend `SearchAnalyticsProvider`, or add a sibling
    interface, to pull pageviews and revenue.
 5. **AI-assisted next-best-action** — keep the deterministic engine as the floor
@@ -333,12 +477,22 @@ most:
 npm test
 ```
 
-88 tests covering the parts where a bug would silently corrupt a decision: the
+133 tests covering the parts where a bug would silently corrupt a decision: the
 scoring engine and demand curve, the SERP weakness summariser, the checkpoint
 evaluator, the next-best-action ranker, the build-pack generator, the CSV
-parser/importer, and an end-to-end pass over the critical flows (create → score →
-capture SERP → apply weakness → generate build pack → publish asset → record
-metrics → review checkpoints) against the in-memory store.
+parser/importer, the DataForSEO wire-shape mapping, and an end-to-end pass over
+the critical flows (create → score → capture SERP → apply weakness → generate
+build pack → publish asset → record metrics → review checkpoints) against the
+in-memory store.
+
+The DataForSEO tests are offline: the mapping tests run against captured payload
+shapes, and the client and provider tests stub `fetch` to assert which endpoints
+are called, what request bodies are sent, and how failures surface. They exist
+mainly to pin the null rules: that a
+measured `0` survives, that a missing field becomes `null` and not `0`, that
+`UNSPECIFIED` competition does not collapse into `LOW`, that advertiser
+competition never leaks into `keywordDifficulty`, and that a fetched SERP row
+leaves every authority field `null`.
 
 Several tests exist specifically to pin down the two rules at the top of this
 file — that unknown never becomes zero, and that the score is never inflated by

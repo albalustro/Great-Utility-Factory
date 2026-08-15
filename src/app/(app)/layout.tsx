@@ -5,7 +5,9 @@ import { signOut } from "@/app/actions/auth";
 import { MainNav } from "@/components/app-shell/nav";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { getDataContext } from "@/lib/data";
+import { isUnconfiguredProduction } from "@/lib/supabase/config";
 
 export default async function AppLayout({
   children,
@@ -13,6 +15,7 @@ export default async function AppLayout({
   children: React.ReactNode;
 }) {
   const { user, mode, store } = await getDataContext();
+  const unconfiguredProduction = isUnconfiguredProduction();
 
   return (
     <div className="flex min-h-screen">
@@ -82,7 +85,27 @@ export default async function AppLayout({
           <MainNav />
         </div>
 
-        <main className="min-w-0 flex-1 px-4 py-5 lg:px-8 lg:py-7">{children}</main>
+        <main className="min-w-0 flex-1 px-4 py-5 lg:px-8 lg:py-7">
+          {unconfiguredProduction ? (
+            <Alert variant="destructive" className="mb-5">
+              <AlertTitle className="text-xs">
+                Running in production without Supabase
+              </AlertTitle>
+              <AlertDescription>
+                Every record you create is held in this server process only, and will
+                be lost on the next restart or redeploy. Set{" "}
+                <code className="font-mono text-[11px]">NEXT_PUBLIC_SUPABASE_URL</code>{" "}
+                and{" "}
+                <code className="font-mono text-[11px]">
+                  NEXT_PUBLIC_SUPABASE_ANON_KEY
+                </code>{" "}
+                and apply the migrations in{" "}
+                <code className="font-mono text-[11px]">supabase/migrations</code>.
+              </AlertDescription>
+            </Alert>
+          ) : null}
+          {children}
+        </main>
       </div>
     </div>
   );

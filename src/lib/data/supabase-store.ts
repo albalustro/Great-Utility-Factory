@@ -14,6 +14,7 @@ import {
   type BuildPack,
   type BuildPackContent,
   type Cluster,
+  type CompetitionLevel,
   type EntityType,
   type Opportunity,
   type OpportunityFilters,
@@ -31,16 +32,19 @@ import type {
   AssetInput,
   AssetMetricInput,
   ClusterInput,
-  OpportunityInput,
   SerpResultInput,
 } from "@/lib/domain/schemas";
 import {
   applyOpportunityFilters,
+  collectJudgements,
   type ActivityFilter,
   type NewActivity,
   type NewAnalysis,
   type NewBuildPack,
   type OpportunityIndexes,
+  type OpportunityPatch,
+  type OpportunityWrite,
+  type ProviderSerpSnapshot,
   type Store,
 } from "@/lib/data/store";
 
@@ -66,6 +70,10 @@ function mapOpportunity(row: Row): Opportunity {
     searchVolume: num(row.search_volume),
     keywordDifficulty: num(row.keyword_difficulty),
     cpc: num(row.cpc),
+    competitionIndex: num(row.competition_index),
+    competitionLevel: (row.competition_level as CompetitionLevel | null) ?? null,
+    metricsProvider: (row.metrics_provider as string | null) ?? null,
+    metricsFetchedAt: (row.metrics_fetched_at as string | null) ?? null,
     trend: row.trend as Trend,
     utilityType: (row.utility_type as UtilityType | null) ?? null,
     serpWeaknessScore: num(row.serp_weakness_score),
@@ -87,7 +95,7 @@ function mapOpportunity(row: Row): Opportunity {
   };
 }
 
-function opportunityToRow(input: Partial<OpportunityInput> & { opportunityScore?: number }): Row {
+function opportunityToRow(input: OpportunityPatch): Row {
   const row: Row = {};
   const set = (key: string, value: unknown) => {
     if (value !== undefined) row[key] = value;
@@ -98,6 +106,10 @@ function opportunityToRow(input: Partial<OpportunityInput> & { opportunityScore?
   set("search_volume", input.searchVolume);
   set("keyword_difficulty", input.keywordDifficulty);
   set("cpc", input.cpc);
+  set("competition_index", input.competitionIndex);
+  set("competition_level", input.competitionLevel);
+  set("metrics_provider", input.metricsProvider);
+  set("metrics_fetched_at", input.metricsFetchedAt);
   set("trend", input.trend);
   set("utility_type", input.utilityType);
   set("serp_weakness_score", input.serpWeaknessScore);
@@ -129,6 +141,9 @@ function mapSerp(row: Row): SerpResult {
     isNewSite: bool(row.is_new_site),
     assessment: row.assessment as SerpAssessment,
     notes: (row.notes as string | null) ?? null,
+    source: (row.source as "MANUAL" | "PROVIDER" | null) ?? "MANUAL",
+    provider: (row.provider as string | null) ?? null,
+    fetchedAt: (row.fetched_at as string | null) ?? null,
     createdAt: row.created_at as string,
     updatedAt: row.updated_at as string,
   };
@@ -346,12 +361,12 @@ export class SupabaseStore implements Store {
     return data ? mapOpportunity(data as Row) : null;
   }
 
-  async createOpportunity(input: OpportunityInput): Promise<Opportunity> {
+  async createOpportunity(input: OpportunityWrite): Promise<Opportunity> {
     const [created] = await this.createOpportunities([input]);
     return created;
   }
 
-  async createOpportunities(inputs: OpportunityInput[]): Promise<Opportunity[]> {
+  async createOpportunities(inputs: OpportunityWrite[]): Promise<Opportunity[]> {
     if (inputs.length === 0) return [];
 
     const rows = inputs.map((input) => ({
@@ -376,10 +391,7 @@ export class SupabaseStore implements Store {
     return created;
   }
 
-  async updateOpportunity(
-    id: string,
-    patch: Partial<OpportunityInput> & { opportunityScore?: number },
-  ): Promise<Opportunity> {
+  async updateOpportunity(id: string, patch: OpportunityPatch): Promise<Opportunity> {
     const data = unwrap(
       await this.client
         .from("opportunities")
@@ -492,6 +504,40 @@ export class SupabaseStore implements Store {
   async deleteSerpResult(id: string): Promise<void> {
     const { error } = await this.client.from("serp_results").delete().eq("id", id);
     if (error) throw new Error(error.message);
+  }
+
+  async replaceProviderSerpResults(
+    opportunityId: string,
+    snapshot: ProviderSerpSnapshot,
+  ): Promise<{ inserted: number; carriedOver: number }> {
+    const existing = await this.listSerpResults(opportunityId);
+    const judgements = collectJudgements(existing);
+
+    const { error } = await this.client
+      .from("serp_results")
+      .delete()
+      .eq("opportunity_id", opportunityId)
+      .eq("source", "PROVIDER");
+    if (error) throw new Error(error.message);
+
+    if (snapshot.results.length === 0) return { inserted: 0, carriedOver: 0 };
+
+    let carriedOver = 0;
+    const rows = snapshot.results.map((input) => {
+      const prior = judgements.get(input.domain.toLowerCase());
+      if (prior) carriedOver += 1;
+      return {
+        ...serpToRow(prior ? { ...input, ...prior } : input),
+        opportunity_id: opportunityId,
+        source: "PROVIDER",
+        provider: snapshot.provider,
+        fetched_at: snapshot.fetchedAt,
+      };
+    });
+
+    unwrap(await this.client.from("serp_results").insert(rows).select("id"));
+
+    return { inserted: rows.length, carriedOver };
   }
 
   // --- AI analyses ---------------------------------------------------------

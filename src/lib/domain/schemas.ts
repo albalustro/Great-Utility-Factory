@@ -2,6 +2,7 @@ import { z } from "zod";
 
 import {
   ASSET_DECISIONS,
+  COMPETITION_LEVELS,
   DECISIONS,
   OPPORTUNITY_SOURCES,
   OPPORTUNITY_STATUSES,
@@ -64,6 +65,8 @@ export const opportunityInputSchema = z.object({
   searchVolume: nullableNumber(0),
   keywordDifficulty: nullableNumber(0, 100),
   cpc: nullableNumber(0),
+  competitionIndex: nullableNumber(0, 100),
+  competitionLevel: z.preprocess(emptyToNull, z.enum(COMPETITION_LEVELS).nullable()),
   trend: z.enum(TRENDS).default("UNKNOWN"),
   utilityType: z.preprocess(emptyToNull, z.enum(UTILITY_TYPES).nullable()),
   serpWeaknessScore: score(),

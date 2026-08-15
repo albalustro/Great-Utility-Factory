@@ -17,17 +17,20 @@ import type {
   AssetInput,
   AssetMetricInput,
   ClusterInput,
-  OpportunityInput,
   SerpResultInput,
 } from "@/lib/domain/schemas";
 import { buildSeedGraph, DEMO_USER_ID } from "@/lib/data/seed";
 import {
   applyOpportunityFilters,
+  collectJudgements,
   type ActivityFilter,
   type NewActivity,
   type NewAnalysis,
   type NewBuildPack,
   type OpportunityIndexes,
+  type OpportunityPatch,
+  type OpportunityWrite,
+  type ProviderSerpSnapshot,
   type Store,
 } from "@/lib/data/store";
 
@@ -132,12 +135,12 @@ export class MemoryStore implements Store {
     return found ? clone(found) : null;
   }
 
-  async createOpportunity(input: OpportunityInput): Promise<Opportunity> {
+  async createOpportunity(input: OpportunityWrite): Promise<Opportunity> {
     const [created] = await this.createOpportunities([input]);
     return created;
   }
 
-  async createOpportunities(inputs: OpportunityInput[]): Promise<Opportunity[]> {
+  async createOpportunities(inputs: OpportunityWrite[]): Promise<Opportunity[]> {
     const created = inputs.map((input) => {
       const timestamp = nowIso();
       const opportunity: Opportunity = {
@@ -149,6 +152,8 @@ export class MemoryStore implements Store {
         createdAt: timestamp,
         updatedAt: timestamp,
         ...input,
+        metricsProvider: input.metricsProvider ?? null,
+        metricsFetchedAt: input.metricsFetchedAt ?? null,
       };
       db().opportunities.unshift(opportunity);
       db().statusHistory.push({
@@ -164,10 +169,7 @@ export class MemoryStore implements Store {
     return clone(created);
   }
 
-  async updateOpportunity(
-    id: string,
-    patch: Partial<OpportunityInput> & { opportunityScore?: number },
-  ): Promise<Opportunity> {
+  async updateOpportunity(id: string, patch: OpportunityPatch): Promise<Opportunity> {
     const index = db().opportunities.findIndex((o) => o.id === id);
     if (index === -1) throw new Error("Opportunity not found");
     const updated = {
@@ -252,6 +254,9 @@ export class MemoryStore implements Store {
     const result: SerpResult = {
       id: crypto.randomUUID(),
       opportunityId,
+      source: "MANUAL",
+      provider: null,
+      fetchedAt: null,
       createdAt: timestamp,
       updatedAt: timestamp,
       ...input,
@@ -270,6 +275,38 @@ export class MemoryStore implements Store {
 
   async deleteSerpResult(id: string): Promise<void> {
     db().serpResults = db().serpResults.filter((s) => s.id !== id);
+  }
+
+  async replaceProviderSerpResults(
+    opportunityId: string,
+    snapshot: ProviderSerpSnapshot,
+  ): Promise<{ inserted: number; carriedOver: number }> {
+    const existing = db().serpResults.filter((s) => s.opportunityId === opportunityId);
+    const judgements = collectJudgements(existing);
+
+    db().serpResults = db().serpResults.filter(
+      (s) => !(s.opportunityId === opportunityId && s.source === "PROVIDER"),
+    );
+
+    const timestamp = nowIso();
+    let carriedOver = 0;
+    for (const input of snapshot.results) {
+      const prior = judgements.get(input.domain.toLowerCase());
+      if (prior) carriedOver += 1;
+      db().serpResults.push({
+        id: crypto.randomUUID(),
+        opportunityId,
+        ...input,
+        ...(prior ?? {}),
+        source: "PROVIDER",
+        provider: snapshot.provider,
+        fetchedAt: snapshot.fetchedAt,
+        createdAt: timestamp,
+        updatedAt: timestamp,
+      });
+    }
+
+    return { inserted: snapshot.results.length, carriedOver };
   }
 
   // --- AI analyses ---------------------------------------------------------

@@ -7,6 +7,7 @@ import {
   Factory,
   KanbanSquare,
   LayoutDashboard,
+  Search,
   Settings,
   Target,
 } from "lucide-react";
@@ -22,6 +23,7 @@ interface NavSection {
 
 const SECTIONS: NavSection[] = [
   { href: "/", label: "Dashboard", icon: LayoutDashboard, exact: true },
+  { href: "/research", label: "Research", icon: Search },
   { href: "/opportunities", label: "Opportunities", icon: Target },
   { href: "/pipeline", label: "Pipeline", icon: KanbanSquare },
   { href: "/portfolio", label: "Portfolio", icon: Factory },

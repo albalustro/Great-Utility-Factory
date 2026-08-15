@@ -1,5 +1,6 @@
 import type {
   AIAnalysisContent,
+  CompetitionLevel,
   Opportunity,
   PageType,
   SerpResult,
@@ -47,6 +48,9 @@ export interface KeywordMetrics {
   searchVolume: number | null;
   keywordDifficulty: number | null;
   cpc: number | null;
+  /** Advertiser competition, kept distinct from organic difficulty. */
+  competitionIndex: number | null;
+  competitionLevel: CompetitionLevel | null;
   trend: Trend;
 }
 
@@ -56,12 +60,33 @@ export interface KeywordLookupRequest {
   language: string;
 }
 
+/** Seed expansion: "calculator" in, hundreds of related keywords out. */
+export interface KeywordExpansionRequest {
+  seeds: string[];
+  country: string;
+  language: string;
+  /** Upper bound on returned candidates. Providers may return fewer. */
+  limit?: number;
+}
+
 export interface KeywordProvider extends ProviderBase {
+  /**
+   * True when this provider can turn seed keywords into new candidates. Not
+   * every keyword API offers discovery, so callers check before offering it.
+   */
+  readonly supportsExpansion: boolean;
+
   /**
    * Returns metrics for the requested keywords. Implementations must omit or
    * null-fill anything the upstream API did not actually return.
    */
   lookup(request: KeywordLookupRequest): Promise<KeywordMetrics[]>;
+
+  /**
+   * Returns candidate keywords related to the seeds. Throws
+   * `ProviderNotConfiguredError` when `supportsExpansion` is false.
+   */
+  expand(request: KeywordExpansionRequest): Promise<KeywordMetrics[]>;
 }
 
 // ---------------------------------------------------------------------------

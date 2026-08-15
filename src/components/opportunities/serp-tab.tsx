@@ -1,8 +1,9 @@
 "use client";
 
 import { useActionState, useState } from "react";
-import { Pencil, Plus, Trash2, X } from "lucide-react";
+import { Download, Pencil, Plus, Trash2, X } from "lucide-react";
 
+import { fetchSerpFromProviderAction } from "@/app/actions/provider";
 import {
   applySuggestedWeaknessAction,
   deleteSerpResultAction,
@@ -37,7 +38,8 @@ import {
   SERP_ASSESSMENT_LABELS,
   type SerpResult,
 } from "@/lib/domain/types";
-import { formatDecimal, humanizeToken } from "@/lib/format";
+import { formatDateTime, formatDecimal, humanizeToken } from "@/lib/format";
+import type { ProviderStatus } from "@/lib/providers/types";
 import { summarizeSerp } from "@/lib/scoring/serp";
 
 const ASSESSMENT_VARIANT: Record<
@@ -59,16 +61,20 @@ export function SerpTab({
   opportunityId,
   results,
   storedWeakness,
+  providerStatus,
 }: {
   opportunityId: string;
   results: SerpResult[];
   storedWeakness: number | null;
+  providerStatus: ProviderStatus;
 }) {
   const [editing, setEditing] = useState<SerpResult | "new" | null>(null);
   const [applyState, applyAction] = useActionState(applySuggestedWeaknessAction, {});
   const [deleteState, deleteAction] = useActionState(deleteSerpResultAction, {});
+  const [fetchState, fetchAction] = useActionState(fetchSerpFromProviderAction, {});
 
   const summary = summarizeSerp(results);
+  const fetched = results.find((result) => result.fetchedAt !== null);
 
   return (
     <div className="space-y-4">
@@ -161,21 +167,56 @@ export function SerpTab({
       </Card>
 
       <Card>
-        <CardHeader className="flex-row items-center justify-between">
+        <CardHeader className="flex-row flex-wrap items-start justify-between gap-3">
           <div>
             <CardTitle>Top 10 results</CardTitle>
             <CardDescription>
               Record what you see. Leave authority fields as unknown unless you have
               real data.
+              {fetched?.fetchedAt
+                ? ` Last fetched from ${fetched.provider ?? "a provider"} on ${formatDateTime(fetched.fetchedAt)}.`
+                : ""}
             </CardDescription>
           </div>
-          <Button size="sm" onClick={() => setEditing("new")}>
-            <Plus className="size-4" />
-            Add result
-          </Button>
+          <div className="flex shrink-0 items-center gap-2">
+            {providerStatus.configured ? (
+              <form action={fetchAction}>
+                <input type="hidden" name="opportunityId" value={opportunityId} />
+                <PendingButton size="sm" variant="outline">
+                  <Download className="size-4" />
+                  Fetch top 10
+                </PendingButton>
+              </form>
+            ) : null}
+            <Button size="sm" onClick={() => setEditing("new")}>
+              <Plus className="size-4" />
+              Add result
+            </Button>
+          </div>
         </CardHeader>
 
         <CardContent className="space-y-3">
+          {providerStatus.configured ? (
+            <p className="text-[11px] text-muted-foreground">
+              Fetching replaces previously fetched rows and leaves rows you added by
+              hand alone. Authority, page type and your assessment are never supplied
+              by the provider — where you have already judged a domain, that judgement
+              is carried onto the new row.
+            </p>
+          ) : null}
+
+          {fetchState.error ? (
+            <Alert variant="destructive">
+              <AlertDescription>{fetchState.error}</AlertDescription>
+            </Alert>
+          ) : null}
+
+          {fetchState.ok && fetchState.message ? (
+            <Alert variant="info">
+              <AlertDescription>{fetchState.message}</AlertDescription>
+            </Alert>
+          ) : null}
+
           {editing ? (
             <SerpForm
               opportunityId={opportunityId}
@@ -201,6 +242,7 @@ export function SerpTab({
                   <TableHead>Low auth</TableHead>
                   <TableHead>New site</TableHead>
                   <TableHead>Assessment</TableHead>
+                  <TableHead>Source</TableHead>
                   <TableHead className="w-20" />
                 </TableRow>
               </TableHeader>
@@ -247,6 +289,11 @@ export function SerpTab({
                       <Badge variant={ASSESSMENT_VARIANT[result.assessment]}>
                         {SERP_ASSESSMENT_LABELS[result.assessment]}
                       </Badge>
+                    </TableCell>
+                    <TableCell className="text-[11px] text-muted-foreground">
+                      {result.source === "PROVIDER"
+                        ? (result.provider ?? "provider")
+                        : "manual"}
                     </TableCell>
                     <TableCell>
                       <div className="flex items-center gap-0.5">

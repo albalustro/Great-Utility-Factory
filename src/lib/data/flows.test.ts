@@ -331,6 +331,129 @@ describe("critical flows", () => {
     expect(await store.listStatusHistory(created.id)).toHaveLength(0);
   });
 
+  describe("provider SERP snapshots", () => {
+    const snapshotRow = (position: number, domain: string) =>
+      serpResultInputSchema.parse({ position, domain });
+
+    async function opportunityWithMixedSerp() {
+      const created = await store.createOpportunity(
+        opportunityInputSchema.parse({
+          keyword: "vat calculator",
+          country: "US",
+          language: "en",
+        }),
+      );
+
+      // One row the operator typed in and reviewed.
+      await store.createSerpResult(
+        created.id,
+        serpResultInputSchema.parse({
+          position: 1,
+          domain: "hand-entered.example",
+          assessment: "STRONG_COMPETITOR",
+        }),
+      );
+
+      await store.replaceProviderSerpResults(created.id, {
+        provider: "dataforseo",
+        fetchedAt: "2026-08-01T00:00:00.000Z",
+        results: [snapshotRow(1, "a.example"), snapshotRow(2, "b.example")],
+      });
+
+      return created.id;
+    }
+
+    it("tags fetched rows with their provenance and leaves manual rows alone", async () => {
+      const id = await opportunityWithMixedSerp();
+      const rows = await store.listSerpResults(id);
+
+      const manual = rows.filter((r) => r.source === "MANUAL");
+      const provider = rows.filter((r) => r.source === "PROVIDER");
+
+      expect(manual).toHaveLength(1);
+      expect(manual[0].domain).toBe("hand-entered.example");
+      expect(manual[0].provider).toBeNull();
+
+      expect(provider).toHaveLength(2);
+      expect(provider.every((r) => r.provider === "dataforseo")).toBe(true);
+      expect(provider.every((r) => r.fetchedAt === "2026-08-01T00:00:00.000Z")).toBe(
+        true,
+      );
+    });
+
+    it("never infers authority or newness for a fetched row", async () => {
+      const id = await opportunityWithMixedSerp();
+      const provider = (await store.listSerpResults(id)).filter(
+        (r) => r.source === "PROVIDER",
+      );
+
+      for (const row of provider) {
+        expect(row.isLowAuthority).toBeNull();
+        expect(row.isNewSite).toBeNull();
+        expect(row.domainAuthority).toBeNull();
+        expect(row.assessment).toBe("UNCLASSIFIED");
+      }
+
+      // And so the SERP summary cannot read a fetch as evidence of weakness.
+      const summary = summarizeSerp(await store.listSerpResults(id));
+      expect(summary.lowAuthorityCount).toBe(0);
+      expect(summary.unknownAuthorityCount).toBe(3);
+    });
+
+    it("replaces only the previous fetch, keeping manual rows", async () => {
+      const id = await opportunityWithMixedSerp();
+
+      await store.replaceProviderSerpResults(id, {
+        provider: "dataforseo",
+        fetchedAt: "2026-08-15T00:00:00.000Z",
+        results: [snapshotRow(1, "c.example")],
+      });
+
+      const rows = await store.listSerpResults(id);
+      expect(rows.map((r) => r.domain).sort()).toEqual([
+        "c.example",
+        "hand-entered.example",
+      ]);
+    });
+
+    it("carries a reviewed judgement onto the same domain in a later fetch", async () => {
+      const id = await opportunityWithMixedSerp();
+
+      const target = (await store.listSerpResults(id)).find(
+        (r) => r.domain === "a.example",
+      );
+      await store.updateSerpResult(
+        target!.id,
+        serpResultInputSchema.parse({
+          position: 1,
+          domain: "a.example",
+          isLowAuthority: "true",
+          assessment: "WEAK_COMPETITOR",
+          notes: "Thin page, no calculator.",
+        }),
+      );
+
+      const outcome = await store.replaceProviderSerpResults(id, {
+        provider: "dataforseo",
+        fetchedAt: "2026-08-15T00:00:00.000Z",
+        results: [snapshotRow(1, "a.example"), snapshotRow(2, "new.example")],
+      });
+
+      expect(outcome).toEqual({ inserted: 2, carriedOver: 1 });
+
+      const rows = await store.listSerpResults(id);
+      const carried = rows.find((r) => r.domain === "a.example");
+      expect(carried?.isLowAuthority).toBe(true);
+      expect(carried?.assessment).toBe("WEAK_COMPETITOR");
+      expect(carried?.notes).toBe("Thin page, no calculator.");
+
+      // A domain that was never reviewed stays unjudged.
+      const fresh = rows.find((r) => r.domain === "new.example");
+      expect(fresh?.isLowAuthority).toBeNull();
+      expect(fresh?.assessment).toBe("UNCLASSIFIED");
+    });
+  });
+
   it("persists settings and reports them back", async () => {
     const updated = await store.updateSettings({
       weights: {

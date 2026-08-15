@@ -73,6 +73,15 @@ export const OPPORTUNITY_SOURCES = [
 ] as const;
 export type OpportunitySource = (typeof OPPORTUNITY_SOURCES)[number];
 
+/**
+ * Google Ads advertiser competition bucket. Deliberately NOT merged into
+ * `keywordDifficulty`: one measures how contested a keyword is for advertisers,
+ * the other how hard it is to rank organically. Collapsing them would relabel a
+ * measurement as something it is not.
+ */
+export const COMPETITION_LEVELS = ["LOW", "MEDIUM", "HIGH"] as const;
+export type CompetitionLevel = (typeof COMPETITION_LEVELS)[number];
+
 export const PAGE_TYPES = [
   "UTILITY",
   "ARTICLE",
@@ -159,6 +168,14 @@ export interface Opportunity extends OpportunitySubScores {
   cpc: number | null;
   trend: Trend;
 
+  /** Google Ads advertiser competition, 0-100. Not an SEO difficulty score. */
+  competitionIndex: number | null;
+  competitionLevel: CompetitionLevel | null;
+
+  /** Provenance for the metrics above. Null means they were entered by hand. */
+  metricsProvider: string | null;
+  metricsFetchedAt: string | null;
+
   utilityType: UtilityType | null;
 
   /** Manual override of the derived demand score, with a mandatory reason. */
@@ -202,6 +219,14 @@ export interface SerpResult {
   isNewSite: boolean | null;
   assessment: SerpAssessment;
   notes: string | null;
+  /**
+   * PROVIDER rows arrived from a SERP API; MANUAL rows were typed in. A provider
+   * row still leaves `isLowAuthority` / `isNewSite` null — no provider we trust
+   * supplies those yet, so they remain the operator's judgement.
+   */
+  source: "MANUAL" | "PROVIDER";
+  provider: string | null;
+  fetchedAt: string | null;
   createdAt: string;
   updatedAt: string;
 }

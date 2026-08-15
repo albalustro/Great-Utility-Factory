@@ -10,6 +10,7 @@ import { AiTab } from "@/components/opportunities/ai-tab";
 import { BuildPackTab } from "@/components/opportunities/build-pack-tab";
 import { ClusterControl } from "@/components/opportunities/cluster-control";
 import { OpportunityForm } from "@/components/opportunities/opportunity-form";
+import { ProviderMetricsControl } from "@/components/opportunities/provider-metrics";
 import { ScoreBreakdownCard } from "@/components/opportunities/score-breakdown";
 import { SerpTab } from "@/components/opportunities/serp-tab";
 import { StatusControl } from "@/components/opportunities/status-control";
@@ -168,33 +169,57 @@ export default async function OpportunityDetailPage(props: {
                 Exactly what was recorded. A dash means the metric is unknown, not zero.
               </CardDescription>
             </CardHeader>
-            <CardContent className="grid grid-cols-2 gap-4 sm:grid-cols-4">
-              <Metric
-                label="Search volume"
-                value={formatInt(opportunity.searchVolume)}
-                isUnknown={opportunity.searchVolume === null}
-                hint="Monthly searches, as supplied by you or a keyword provider."
-                emphasis
-              />
-              <Metric
-                label="Keyword difficulty"
-                value={formatDecimal(opportunity.keywordDifficulty, 0)}
-                isUnknown={opportunity.keywordDifficulty === null}
-                hint="Third-party difficulty estimate, 0-100. Lower is easier."
-                emphasis
-              />
-              <Metric
-                label="CPC"
-                value={formatCurrency(opportunity.cpc, settings.currency)}
-                isUnknown={opportunity.cpc === null}
-                hint="Cost per click, used as a proxy for commercial value."
-                emphasis
-              />
-              <Metric
-                label="Trend"
-                value={humanizeToken(opportunity.trend)}
-                isUnknown={opportunity.trend === "UNKNOWN"}
-                emphasis
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-2 gap-4 sm:grid-cols-5">
+                <Metric
+                  label="Search volume"
+                  value={formatInt(opportunity.searchVolume)}
+                  isUnknown={opportunity.searchVolume === null}
+                  hint="Monthly searches, as supplied by you or a keyword provider."
+                  emphasis
+                />
+                <Metric
+                  label="Keyword difficulty"
+                  value={formatDecimal(opportunity.keywordDifficulty, 0)}
+                  isUnknown={opportunity.keywordDifficulty === null}
+                  hint="Organic ranking difficulty, 0-100. Lower is easier."
+                  emphasis
+                />
+                <Metric
+                  label="CPC"
+                  value={formatCurrency(opportunity.cpc, settings.currency)}
+                  isUnknown={opportunity.cpc === null}
+                  hint="Cost per click, used as a proxy for commercial value."
+                  emphasis
+                />
+                <Metric
+                  label="Ad competition"
+                  value={
+                    opportunity.competitionIndex === null
+                      ? "—"
+                      : `${formatDecimal(opportunity.competitionIndex, 0)}${
+                          opportunity.competitionLevel
+                            ? ` (${opportunity.competitionLevel})`
+                            : ""
+                        }`
+                  }
+                  isUnknown={opportunity.competitionIndex === null}
+                  hint="How contested this keyword is for advertisers, 0-100. This is NOT organic ranking difficulty — the two are kept separate on purpose."
+                  emphasis
+                />
+                <Metric
+                  label="Trend"
+                  value={humanizeToken(opportunity.trend)}
+                  isUnknown={opportunity.trend === "UNKNOWN"}
+                  emphasis
+                />
+              </div>
+
+              <ProviderMetricsControl
+                opportunityId={id}
+                metricsProvider={opportunity.metricsProvider}
+                metricsFetchedAt={opportunity.metricsFetchedAt}
+                providerStatus={providerStatuses.keyword}
               />
             </CardContent>
           </Card>
@@ -283,6 +308,7 @@ export default async function OpportunityDetailPage(props: {
           opportunityId={id}
           results={serpResults}
           storedWeakness={opportunity.serpWeaknessScore}
+          providerStatus={providerStatuses.serp}
         />
       ) : null}
 

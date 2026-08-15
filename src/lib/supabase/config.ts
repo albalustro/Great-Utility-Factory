@@ -30,3 +30,13 @@ export type AppMode = "supabase" | "demo";
 export function getAppMode(): AppMode {
   return isSupabaseConfigured() ? "supabase" : "demo";
 }
+
+/**
+ * Demo mode is a development convenience, not a deployment target: the store is
+ * held in process memory, so a production instance running this way loses every
+ * record on the next restart or scale event. That is worth saying loudly rather
+ * than leaving to a note in the sidebar.
+ */
+export function isUnconfiguredProduction(): boolean {
+  return process.env.NODE_ENV === "production" && !isSupabaseConfigured();
+}

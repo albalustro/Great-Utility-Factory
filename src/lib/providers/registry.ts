@@ -1,6 +1,10 @@
 import type { ProviderSettings } from "@/lib/domain/types";
 import { ClaudeAIProvider } from "@/lib/providers/claude";
 import {
+  DataForSeoKeywordProvider,
+  DataForSeoSerpProvider,
+} from "@/lib/providers/dataforseo";
+import {
   ManualAIProvider,
   ManualKeywordProvider,
   ManualSearchAnalyticsProvider,
@@ -27,10 +31,12 @@ type Factory<T> = () => T;
 
 const keywordProviders: Record<string, Factory<KeywordProvider>> = {
   manual: () => new ManualKeywordProvider(),
+  dataforseo: () => new DataForSeoKeywordProvider(),
 };
 
 const serpProviders: Record<string, Factory<SerpProvider>> = {
   manual: () => new ManualSerpProvider(),
+  dataforseo: () => new DataForSeoSerpProvider(),
 };
 
 const aiProviders: Record<string, Factory<AIProvider>> = {

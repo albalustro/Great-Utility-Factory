@@ -2,6 +2,7 @@ import type {
   AIAnalysisRequest,
   AIAnalysisResult,
   AIProvider,
+  KeywordExpansionRequest,
   KeywordLookupRequest,
   KeywordMetrics,
   KeywordProvider,
@@ -37,12 +38,18 @@ const manualStatus = (id: string, label: string, what: string): ProviderStatus =
 export class ManualKeywordProvider implements KeywordProvider {
   readonly id = "manual";
   readonly label = "Manual / CSV import";
+  readonly supportsExpansion = false;
 
   status(): ProviderStatus {
     return manualStatus(this.id, this.label, "Keyword data");
   }
 
   async lookup(_request: KeywordLookupRequest): Promise<KeywordMetrics[]> {
+    void _request;
+    throw new ProviderNotConfiguredError("keyword", this.status());
+  }
+
+  async expand(_request: KeywordExpansionRequest): Promise<KeywordMetrics[]> {
     void _request;
     throw new ProviderNotConfiguredError("keyword", this.status());
   }

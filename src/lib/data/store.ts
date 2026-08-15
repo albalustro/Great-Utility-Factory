@@ -68,6 +68,29 @@ export interface NewBuildPack {
   usedAiAnalysis: boolean;
 }
 
+/**
+ * An opportunity write may carry provenance for its metrics. The form path
+ * leaves these undefined; the research importer and the "refresh from provider"
+ * action set them so a reader can tell where a number came from.
+ */
+export type OpportunityWrite = OpportunityInput & {
+  metricsProvider?: string | null;
+  metricsFetchedAt?: string | null;
+};
+
+export type OpportunityPatch = Partial<OpportunityInput> & {
+  opportunityScore?: number;
+  metricsProvider?: string | null;
+  metricsFetchedAt?: string | null;
+};
+
+/** A top-10 snapshot fetched from a SERP provider. */
+export interface ProviderSerpSnapshot {
+  provider: string;
+  fetchedAt: string;
+  results: SerpResultInput[];
+}
+
 export interface Store {
   /** Which backend is in use — the UI surfaces this so demo mode is never mistaken for real persistence. */
   readonly kind: "supabase" | "memory";
@@ -77,12 +100,9 @@ export interface Store {
 
   listOpportunities(filters?: OpportunityFilters): Promise<Opportunity[]>;
   getOpportunity(id: string): Promise<Opportunity | null>;
-  createOpportunity(input: OpportunityInput): Promise<Opportunity>;
-  createOpportunities(inputs: OpportunityInput[]): Promise<Opportunity[]>;
-  updateOpportunity(
-    id: string,
-    patch: Partial<OpportunityInput> & { opportunityScore?: number },
-  ): Promise<Opportunity>;
+  createOpportunity(input: OpportunityWrite): Promise<Opportunity>;
+  createOpportunities(inputs: OpportunityWrite[]): Promise<Opportunity[]>;
+  updateOpportunity(id: string, patch: OpportunityPatch): Promise<Opportunity>;
   setOpportunityStatus(
     id: string,
     status: OpportunityStatus,
@@ -93,8 +113,19 @@ export interface Store {
 
   listSerpResults(opportunityId: string): Promise<SerpResult[]>;
   createSerpResult(opportunityId: string, input: SerpResultInput): Promise<SerpResult>;
+  /** Editing a row keeps whatever provenance it already had. */
   updateSerpResult(id: string, input: SerpResultInput): Promise<SerpResult>;
   deleteSerpResult(id: string): Promise<void>;
+  /**
+   * Swaps in a fresh provider snapshot. Rows the operator entered by hand are
+   * left alone, and any judgement they had already recorded against a domain
+   * (page type, authority flags, assessment, notes) is carried onto the new row
+   * for that domain — a re-fetch must not silently discard review work.
+   */
+  replaceProviderSerpResults(
+    opportunityId: string,
+    snapshot: ProviderSerpSnapshot,
+  ): Promise<{ inserted: number; carriedOver: number }>;
 
   listAnalyses(opportunityId: string): Promise<AIAnalysis[]>;
   createAnalysis(input: NewAnalysis): Promise<AIAnalysis>;
@@ -126,6 +157,47 @@ export interface Store {
 
   listActivity(filter?: ActivityFilter): Promise<ActivityEntry[]>;
   appendActivity(entry: NewActivity): Promise<ActivityEntry>;
+}
+
+/**
+ * The parts of a SERP row that represent the operator's own review rather than
+ * anything a provider told us. These survive a re-fetch.
+ */
+export type SerpJudgement = Pick<
+  SerpResult,
+  | "domainAuthority"
+  | "pageType"
+  | "isLowAuthority"
+  | "isNewSite"
+  | "assessment"
+  | "notes"
+>;
+
+/**
+ * Indexes prior review work by domain so a fresh snapshot can inherit it.
+ * Untouched rows are skipped: an unreviewed row has nothing worth carrying, and
+ * copying its defaults forward would overwrite whatever the provider returned.
+ */
+export function collectJudgements(rows: SerpResult[]): Map<string, SerpJudgement> {
+  const out = new Map<string, SerpJudgement>();
+  for (const row of rows) {
+    const reviewed =
+      row.assessment !== "UNCLASSIFIED" ||
+      row.isLowAuthority !== null ||
+      row.isNewSite !== null ||
+      row.domainAuthority !== null ||
+      row.notes !== null;
+    if (!reviewed) continue;
+    out.set(row.domain.toLowerCase(), {
+      domainAuthority: row.domainAuthority,
+      pageType: row.pageType,
+      isLowAuthority: row.isLowAuthority,
+      isNewSite: row.isNewSite,
+      assessment: row.assessment,
+      notes: row.notes,
+    });
+  }
+  return out;
 }
 
 /** Shared client-side filtering so both adapters behave identically. */
