@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+        xmlns:xhtml="http://www.w3.org/1999/xhtml">
+
+  <url>
+    <loc>https://where-did-my-time-go.com/</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://where-did-my-time-go.com/en/"/>
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://where-did-my-time-go.com/pt-br/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://where-did-my-time-go.com/"/>
+  </url>
+
+  <url>
+    <loc>https://where-did-my-time-go.com/en/</loc>
+    <changefreq>monthly</changefreq>
+    <priority>1.0</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://where-did-my-time-go.com/en/"/>
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://where-did-my-time-go.com/pt-br/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://where-did-my-time-go.com/"/>
+  </url>
+
+  <url>
+    <loc>https://where-did-my-time-go.com/pt-br/</loc>
+    <changefreq>monthly</changefreq>
+    <priority>1.0</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://where-did-my-time-go.com/en/"/>
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://where-did-my-time-go.com/pt-br/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://where-did-my-time-go.com/"/>
+  </url>
+
+</urlset>
