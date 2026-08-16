@@ -1,0 +1,873 @@
+<title>Carta à Mesa</title>
+<style>
+  :root {
+    --paper:   #E7E9E2;
+    --card:    #F6F7F3;
+    --card-2:  #EFF1EA;
+    --ink:     #16232A;
+    --ink-soft:#59656B;
+    --ink-faint:#8B9599;
+    --blue:    #1D4E68;
+    --blue-bg: #DCE7ED;
+    --stamp:   #A83226;
+    --stamp-bg:#F0DEDA;
+    --rule:    #CBD1C7;
+    --rule-soft:#DDE1D8;
+    --shadow:  0 1px 2px rgba(22,35,42,.06), 0 8px 24px -16px rgba(22,35,42,.35);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --paper:   #0F171C;
+      --card:    #17222A;
+      --card-2:  #1C2932;
+      --ink:     #E3E8E2;
+      --ink-soft:#9AA6AA;
+      --ink-faint:#6E7C82;
+      --blue:    #8CBFD8;
+      --blue-bg: #1B3745;
+      --stamp:   #E2796A;
+      --stamp-bg:#38231F;
+      --rule:    #2C3A43;
+      --rule-soft:#232F37;
+      --shadow:  0 1px 2px rgba(0,0,0,.4), 0 8px 24px -16px rgba(0,0,0,.8);
+    }
+  }
+  :root[data-theme="dark"] {
+    --paper:   #0F171C;
+    --card:    #17222A;
+    --card-2:  #1C2932;
+    --ink:     #E3E8E2;
+    --ink-soft:#9AA6AA;
+    --ink-faint:#6E7C82;
+    --blue:    #8CBFD8;
+    --blue-bg: #1B3745;
+    --stamp:   #E2796A;
+    --stamp-bg:#38231F;
+    --rule:    #2C3A43;
+    --rule-soft:#232F37;
+    --shadow:  0 1px 2px rgba(0,0,0,.4), 0 8px 24px -16px rgba(0,0,0,.8);
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    background: var(--paper);
+    color: var(--ink);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    font-size: 17px;
+    line-height: 1.62;
+    margin: 0;
+    padding: 0 20px 96px;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .wrap { max-width: 1060px; margin: 0 auto; }
+  .col  { max-width: 680px; }
+
+  h1, h2, h3, h4 {
+    font-family: Palatino, "Palatino Linotype", "Book Antiqua", Georgia, serif;
+    text-wrap: balance;
+    font-weight: 600;
+    margin: 0;
+  }
+
+  .mono, .eyebrow, th, .tag, .pill, .stamp-num, .tc, caption {
+    font-family: "Courier New", Courier, ui-monospace, monospace;
+  }
+
+  .eyebrow {
+    font-size: 11.5px;
+    letter-spacing: .16em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    margin: 0;
+  }
+
+  /* ---------- header ---------- */
+  header.masthead {
+    border-bottom: 1px solid var(--rule);
+    padding: 0 0 40px;
+    margin-bottom: 56px;
+  }
+  .airmail {
+    height: 7px;
+    background: repeating-linear-gradient(
+      -45deg,
+      var(--stamp) 0 11px,
+      transparent 11px 22px,
+      var(--blue) 22px 33px,
+      transparent 33px 44px
+    );
+    opacity: .85;
+    margin: 0 -20px 40px;
+  }
+  h1 {
+    font-size: clamp(38px, 7vw, 62px);
+    line-height: 1.02;
+    letter-spacing: -.015em;
+    margin: 14px 0 18px;
+  }
+  .deck {
+    font-size: 20px;
+    line-height: 1.5;
+    color: var(--ink-soft);
+    max-width: 620px;
+    margin: 0 0 26px;
+  }
+  .meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 28px;
+    font-size: 12px;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    font-family: "Courier New", Courier, monospace;
+  }
+
+  /* ---------- sections ---------- */
+  section { margin-bottom: 80px; }
+
+  .sec-head {
+    display: flex;
+    align-items: flex-start;
+    gap: 20px;
+    margin-bottom: 34px;
+    padding-bottom: 18px;
+    border-bottom: 1px solid var(--rule);
+  }
+  .stamp-num {
+    flex: none;
+    width: 46px; height: 46px;
+    border: 1.5px solid var(--stamp);
+    border-radius: 50%;
+    color: var(--stamp);
+    display: grid;
+    place-items: center;
+    font-size: 17px;
+    font-weight: bold;
+    transform: rotate(-7deg);
+    margin-top: 4px;
+  }
+  .sec-head h2 {
+    font-size: clamp(26px, 4vw, 34px);
+    line-height: 1.14;
+    letter-spacing: -.01em;
+  }
+  .sec-head .eyebrow { margin-bottom: 7px; }
+
+  h3 {
+    font-size: 22px;
+    line-height: 1.25;
+    margin: 46px 0 14px;
+  }
+  h4 {
+    font-size: 16.5px;
+    margin: 30px 0 8px;
+  }
+  p { margin: 0 0 17px; }
+  .col > p, .col > ul, .col > ol { max-width: 680px; }
+
+  ul, ol { margin: 0 0 18px; padding-left: 22px; }
+  li { margin-bottom: 9px; }
+  li::marker { color: var(--ink-faint); }
+
+  strong { font-weight: 650; }
+  em { color: var(--ink-soft); }
+
+  a { color: var(--blue); text-underline-offset: 3px; }
+  a:focus-visible, summary:focus-visible {
+    outline: 2px solid var(--blue);
+    outline-offset: 3px;
+  }
+
+  /* ---------- components ---------- */
+  .card {
+    background: var(--card);
+    border: 1px solid var(--rule);
+    padding: 26px 28px;
+    margin: 26px 0;
+    box-shadow: var(--shadow);
+  }
+  .card > :last-child { margin-bottom: 0; }
+  .card .eyebrow { margin-bottom: 10px; }
+
+  .letter {
+    background: var(--card);
+    border: 1px solid var(--rule);
+    border-left: 4px solid var(--blue);
+    padding: 24px 28px;
+    margin: 26px 0;
+    font-family: Palatino, "Palatino Linotype", "Book Antiqua", Georgia, serif;
+    font-size: 19.5px;
+    line-height: 1.5;
+  }
+  .letter > :last-child { margin-bottom: 0; }
+
+  .grid {
+    display: grid;
+    gap: 18px;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    margin: 26px 0;
+  }
+
+  .pill {
+    display: inline-block;
+    font-size: 10.5px;
+    letter-spacing: .11em;
+    text-transform: uppercase;
+    padding: 3px 9px;
+    border-radius: 2px;
+    white-space: nowrap;
+  }
+  .pill-seo   { background: var(--blue-bg);  color: var(--blue); }
+  .pill-viral { background: var(--stamp-bg); color: var(--stamp); }
+
+  /* ---------- tables ---------- */
+  .scroller {
+    overflow-x: auto;
+    margin: 26px 0;
+    border: 1px solid var(--rule);
+    background: var(--card);
+  }
+  table {
+    border-collapse: collapse;
+    width: 100%;
+    min-width: 720px;
+    font-size: 15px;
+  }
+  th {
+    text-align: left;
+    font-size: 10.5px;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    font-weight: normal;
+    padding: 13px 16px;
+    border-bottom: 1px solid var(--rule);
+    background: var(--card-2);
+    white-space: nowrap;
+  }
+  td {
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--rule-soft);
+    vertical-align: top;
+    line-height: 1.45;
+  }
+  tbody tr:last-child td { border-bottom: none; }
+  td.num {
+    font-family: "Courier New", Courier, monospace;
+    color: var(--ink-faint);
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+  .t-title { font-weight: 600; }
+
+  /* ---------- script ---------- */
+  .script { margin: 26px 0; border-top: 1px solid var(--rule); }
+  .beat {
+    display: grid;
+    grid-template-columns: 104px 1fr;
+    gap: 0 24px;
+    padding: 22px 0;
+    border-bottom: 1px solid var(--rule-soft);
+  }
+  .tc {
+    font-size: 13px;
+    color: var(--stamp);
+    font-variant-numeric: tabular-nums;
+    padding-top: 3px;
+  }
+  .tc span {
+    display: block;
+    color: var(--ink-faint);
+    font-size: 10.5px;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    margin-top: 5px;
+  }
+  .beat .vo {
+    font-family: Palatino, "Palatino Linotype", "Book Antiqua", Georgia, serif;
+    font-size: 18.5px;
+    line-height: 1.5;
+    margin-bottom: 12px;
+  }
+  .beat .dir {
+    font-size: 14px;
+    color: var(--ink-soft);
+    border-left: 2px solid var(--rule);
+    padding-left: 13px;
+    margin: 0;
+  }
+  .beat h4 { margin: 0 0 10px; }
+  @media (max-width: 620px) {
+    .beat { grid-template-columns: 1fr; gap: 10px; }
+    .tc span { display: inline; margin-left: 10px; }
+  }
+
+  .tags { display: flex; flex-wrap: wrap; gap: 8px; margin: 18px 0 26px; }
+  .tag {
+    font-size: 13px;
+    padding: 5px 11px;
+    background: var(--card-2);
+    border: 1px solid var(--rule);
+    color: var(--ink-soft);
+  }
+
+  .callout {
+    background: var(--stamp-bg);
+    border: 1px solid var(--stamp);
+    padding: 22px 26px;
+    margin: 26px 0;
+  }
+  .callout > :last-child { margin-bottom: 0; }
+  .callout .eyebrow { color: var(--stamp); margin-bottom: 9px; }
+
+  pre {
+    background: var(--card-2);
+    border: 1px solid var(--rule);
+    padding: 20px 22px;
+    overflow-x: auto;
+    font-family: "Courier New", Courier, monospace;
+    font-size: 13.5px;
+    line-height: 1.68;
+    white-space: pre-wrap;
+    margin: 18px 0 26px;
+  }
+
+  footer {
+    border-top: 1px solid var(--rule);
+    padding-top: 26px;
+    margin-top: 20px;
+    font-size: 14px;
+    color: var(--ink-faint);
+  }
+</style>
+
+<div class="airmail"></div>
+<div class="wrap">
+
+  <header class="masthead">
+    <p class="eyebrow">Estratégia de canal · YouTube · pt-BR</p>
+    <h1>Carta à Mesa</h1>
+    <p class="deck">Um canal de culinária onde a receita nunca é o assunto principal — construído sobre uma correspondência anônima que só cresce com o tempo.</p>
+    <div class="meta">
+      <span>Para: Michelle</span>
+      <span>Agosto 2026</span>
+      <span>Veredito + Identidade + 90 dias + Roteiro + SEO</span>
+    </div>
+  </header>
+
+  <!-- ============ 1. VEREDITO ============ -->
+  <section id="veredito">
+    <div class="sec-head">
+      <div class="stamp-num">1</div>
+      <div>
+        <p class="eyebrow">Leitura honesta</p>
+        <h2>O nicho e a ideia</h2>
+      </div>
+    </div>
+
+    <div class="col">
+      <p><strong>Resumo:</strong> o nicho é dos mais saturados do YouTube. A ideia não é. E essa distinção é a coisa mais importante deste documento inteiro.</p>
+
+      <p>Culinária é um dos maiores e mais disputados nichos da plataforma — competir por "receita de bolo de cenoura" contra canais com dez anos de autoridade é uma briga perdida. Mas a Michelle não está propondo um canal de receitas. Está propondo <strong>um formato de correspondência que usa comida como veículo</strong>. Canais construídos sobre formato são muito mais defensáveis do que canais construídos sobre catálogo de receitas, porque um formato não pode ser superado por alguém que simplesmente publica mais.</p>
+
+      <h3>O que é genuinamente forte</h3>
+      <ul>
+        <li><strong>O conteúdo se gera sozinho.</strong> Cada episódio no ar produz as cartas do próximo episódio. É um volante: quanto mais tempo o canal existe, mais fácil fica alimentá-lo. Quase nenhum canal de culinária tem isso.</li>
+        <li><strong>Engajamento por visualização altíssimo.</strong> Histórias reais de estranhos geram comentários longos, não emojis. Comentário longo é sinal forte para o algoritmo e é o que transforma espectador em comunidade.</li>
+        <li><strong>Compartilhamento natural.</strong> Ninguém manda uma receita de purê para um amigo. Manda uma história que lembrou dele. Esse formato tem um motivo embutido para ser enviado no WhatsApp.</li>
+        <li><strong>Independência de tendências.</strong> Não depende de trend, de áudio viral, de "testei o hack de X". Envelhece bem — um episódio de 2026 continua fazendo sentido em 2030.</li>
+        <li><strong>Teto muito alto fora do YouTube.</strong> Um arquivo de receitas anônimas com procedência é livro, é podcast, é documentário, é exposição. Poucas ideias de canal têm pernas para virar propriedade intelectual de verdade. Essa tem.</li>
+      </ul>
+
+      <h3>O que é frágil — e precisa ser resolvido antes do lançamento</h3>
+      <ul>
+        <li><strong>Partida a frio.</strong> O formato depende de cartas, e cartas dependem de audiência. Sem 6 a 10 cartas reais na mão <em>antes</em> do primeiro vídeo, o canal trava no episódio 2. Isso é o risco número um e tem solução prática (seção 6).</li>
+        <li><strong>Descoberta fraca por busca.</strong> Ninguém digita "história por trás de uma receita" no YouTube. Vídeos narrativos vivem de sugeridos e da página inicial, que é um motor mais lento de ligar e mais dependente de retenção. A resposta é híbrida: metade do catálogo puxa busca, metade constrói identidade.</li>
+        <li><strong>Custo de produção por vídeo.</strong> Cada episódio é dois trabalhos: narrativa e culinária. Sem gravação em lote, o ritmo quebra no segundo mês. Esse é o motivo pelo qual a seção 3 é montada em blocos.</li>
+        <li><strong>Risco de credibilidade.</strong> Se em algum momento o público suspeitar que as cartas são escritas pela produção, o canal morre — e não volta. Toda a defensabilidade está na confiança. Isso exige regra explícita, não boa intenção.</li>
+      </ul>
+
+      <div class="callout">
+        <p class="eyebrow">Expectativa realista</p>
+        <p>Os primeiros 90 dias <strong>não são para crescer</strong>. São para provar o formato, montar catálogo e acumular cartas. Formatos narrativos costumam levar de 6 a 12 meses para engrenar, e engrenam mais rápido do que decaem. Se a métrica de sucesso do trimestre for inscritos, a Michelle vai desistir em fevereiro. Se for <em>"quantas cartas reais eu tenho na caixa"</em>, ela ganha.</p>
+      </div>
+
+      <h3>Potencial, em uma frase</h3>
+      <p>Descoberta: <strong>média-baixa no começo</strong>, alta depois que o formato for reconhecível. Engajamento: <strong>alto desde o primeiro vídeo</strong>. Retenção: <strong>alta, se a edição for firme</strong> — histórias tocantes mal editadas arrastam, e arrastar mata. É uma aposta de longo prazo com teto grande, não uma aposta de crescimento rápido. Vale a pena.</p>
+
+      <h4>Uma decisão que precisa ser tomada agora: o idioma</h4>
+      <p>Fazer em inglês amplia o teto, mas joga a Michelle na competição mais brutal da plataforma logo no dia um. Fazer em <strong>português</strong> é a recomendação: o conceito "cartas do mundo inteiro" é mais novo e mais exótico para o público brasileiro do que para o americano, a concorrência no formato é praticamente zero em pt-BR, e a diáspora brasileira — que é grande, saudosa e altamente engajada — é ao mesmo tempo audiência e fonte de cartas. Ativar legendas em inglês e espanhol desde o primeiro vídeo mantém a porta internacional aberta sem custo.</p>
+    </div>
+  </section>
+
+  <!-- ============ 2. IDENTIDADE ============ -->
+  <section id="identidade">
+    <div class="sec-head">
+      <div class="stamp-num">2</div>
+      <div>
+        <p class="eyebrow">Prompt 2 · Identidade do canal</p>
+        <h2>Nome, promessa, público, pilares e mecanismo</h2>
+      </div>
+    </div>
+
+    <div class="col"><h3>Cinco opções de nome</h3></div>
+
+    <div class="scroller">
+      <table>
+        <thead>
+          <tr><th>#</th><th>Nome</th><th>Por que funciona</th><th>Risco</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="num">01</td>
+            <td class="t-title">Carta à Mesa</td>
+            <td>Curto, quente, memorável. Funciona como nome de canal, de livro e de programa. Traduz limpo ("Letter to the Table"). Junta os dois mundos em três palavras.</td>
+            <td>Não explica sozinho o que é — depende do slogan.</td>
+          </tr>
+          <tr>
+            <td class="num">02</td>
+            <td class="t-title">Remetente Desconhecido</td>
+            <td>O mais distintivo dos cinco. Coloca o anonimato — o diferencial real — no próprio nome. Ótimo para thumbnail e marca.</td>
+            <td>Tom frio, quase de suspense. Briga com a proposta de acolhimento.</td>
+          </tr>
+          <tr>
+            <td class="num">03</td>
+            <td class="t-title">Receitas de Estranhos</td>
+            <td>Explica tudo instantaneamente e ainda carrega palavra de busca. Zero atrito de entendimento.</td>
+            <td>Descritivo demais, difícil de crescer para além do formato. Vira teto.</td>
+          </tr>
+          <tr>
+            <td class="num">04</td>
+            <td class="t-title">Sal &amp; Saudade</td>
+            <td>Lindo, muito brasileiro, emocionalmente exato. Memorável de primeira.</td>
+            <td>Não comunica formato nenhum — poderia ser um blog de crônicas. E "saudade" não atravessa fronteira.</td>
+          </tr>
+          <tr>
+            <td class="num">05</td>
+            <td class="t-title">A Carta Nº</td>
+            <td>Numeração embutida vira sistema: cada episódio é "A Carta Nº 12". Cria coleção e senso de arquivo crescente.</td>
+            <td>Estranho de falar em voz alta e ruim para busca.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="col">
+      <p><strong>Recomendação: Carta à Mesa.</strong> É o único que é ao mesmo tempo quente, curto, marcante e capaz de sobreviver a uma mudança de formato daqui a três anos. A numeração da opção 5 não se perde — vira o sistema interno dos episódios ("Carta nº 07").</p>
+
+      <h3>Slogan</h3>
+      <div class="letter">
+        <p>Estranhos me mandam suas receitas.<br>Eu cozinho as histórias por trás delas.</p>
+      </div>
+      <p><strong>Versão curta para banner e bio:</strong> "Receitas de estranhos. Histórias de verdade."</p>
+      <p><em>Passa no teste do "E daí?":</em> o espectador sabe exatamente o que vai receber (uma receita de origem real), quem entrega (a Michelle cozinhando), e qual é a virada (a história vem junto e é o ponto). Não é adjetivo, é mecânica.</p>
+
+      <h3>Persona do público</h3>
+      <div class="card">
+        <p class="eyebrow">Persona primária</p>
+        <p><strong>Mulher, 32 a 55 anos, cozinha quase todo dia — por obrigação.</strong> Assiste conteúdo de comida mais para ter companhia do que para aprender. Costuma deixar o vídeo tocando enquanto pica cebola ou come sozinha.</p>
+        <p><strong>Dores específicas:</strong></p>
+        <ul>
+          <li>Perdeu o prazer de cozinhar em algum ponto entre a marmita e o jantar de terça. Cozinhar virou tarefa, não gesto.</li>
+          <li>Alguém da família morreu e levou junto uma receita que ela nunca anotou. Ela tentou reproduzir. Não ficou igual. Isso dói mais do que ela admite.</li>
+          <li>Se sente atrasada com conteúdo de comida: tudo é rápido, otimizado, bonito demais, com cortes a cada segundo. Ela termina o vídeo e não lembra de nada.</li>
+          <li>Está cansada de receita sem alma — canal genérico, voz de robô, receita copiada, apresentador que ela não distingue de outros dez.</li>
+          <li>Tem uma solidão que ela não nomeia. Quer sentir alguma coisa, não decorar um passo a passo.</li>
+        </ul>
+        <p><strong>O que ela quer e não encontra:</strong> um lugar onde comida seja tratada como memória, e não como conteúdo. E alguém que fale com ela como se estivesse na mesma cozinha.</p>
+      </div>
+      <div class="card">
+        <p class="eyebrow">Persona secundária — estratégica</p>
+        <p><strong>Brasileiros e imigrantes fora do país, 25 a 60 anos.</strong> Cozinham para lembrar de casa. Essa persona é dupla: consome com intensidade absurda <em>e</em> é a principal fornecedora de cartas. É por onde a partida a frio se resolve — e é o motivo pelo qual vale ativar legenda em inglês desde o começo.</p>
+      </div>
+
+      <h3>Quatro pilares de conteúdo</h3>
+      <p>Cada um resolve um trabalho diferente. Nenhum cobre o trabalho do outro.</p>
+    </div>
+
+    <div class="scroller">
+      <table>
+        <thead>
+          <tr><th>Pilar</th><th>O que é</th><th>Trabalho que faz</th><th>Frequência</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="t-title">A Carta</td>
+            <td>O episódio-carro-chefe. Uma carta anônima por vídeo: leitura, contexto, preparo fiel ao que está escrito, prova ao vivo, resposta ao remetente no ar.</td>
+            <td><strong>Identidade e emoção.</strong> É o que faz alguém virar inscrito.</td>
+            <td>2× por mês</td>
+          </tr>
+          <tr>
+            <td class="t-title">Cozinha Aberta</td>
+            <td>A receita sozinha, ensinada de forma limpa e completa, sem história nenhuma. Gravada no mesmo dia do episódio narrativo, publicada como vídeo separado.</td>
+            <td><strong>Tráfego de busca.</strong> É a porta de entrada de quem nunca ouviu falar do canal.</td>
+            <td>1× por mês</td>
+          </tr>
+          <tr>
+            <td class="t-title">Raiz</td>
+            <td>Investigação de origem: por que aquele prato existe, como atravessou o oceano, o que ele diz sobre o lugar. Sem carta e sem cozinha — é o pilar documental.</td>
+            <td><strong>Autoridade e curiosidade.</strong> Prova que o canal sabe do que fala.</td>
+            <td>1× por mês</td>
+          </tr>
+          <tr>
+            <td class="t-title">Correspondência</td>
+            <td>Fecha o ciclo: respostas que os remetentes mandaram depois do episódio ir ao ar, espectadores que cozinharam a receita, e — de vez em quando — uma carta da própria Michelle sobre a família dela.</td>
+            <td><strong>Comunidade e prova social.</strong> É o que faz chegar mais carta.</td>
+            <td>Shorts + 1 vídeo a cada 2 meses</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="col">
+      <h3>O mecanismo único</h3>
+      <div class="letter">
+        <p><strong>O Arquivo.</strong> Um acervo público e crescente de receitas anônimas com procedência real, onde todo episódio nasce de uma carta que alguém de verdade enviou — e todo remetente recebe uma resposta no ar.</p>
+      </div>
+      <p>Isso é defensável em três camadas, e nenhuma delas é "tom de voz":</p>
+      <ol>
+        <li><strong>A caixa de entrada não se copia.</strong> Qualquer pessoa pode imitar o formato amanhã. Ninguém pode imitar as 400 cartas que a Michelle vai ter recebido até lá. O ativo composto com o tempo, e a vantagem aumenta em vez de diminuir — é a definição de fosso competitivo.</li>
+        <li><strong>O contrato de anonimato é o que destrava a intimidade.</strong> Sem nome, sem rosto, sem cidade exata, nunca. É essa promessa que faz alguém escrever sobre o prato que a mãe fazia antes de adoecer. Um concorrente com o mesmo formato mas sem essa disciplina recebe cartas piores — e receber cartas piores é receber episódios piores.</li>
+        <li><strong>O arquivo é físico e visível.</strong> Uma caixa real de fichas numeradas que cresce em cena a cada episódio. Assinatura visual gratuita, senso de coleção para o espectador, e o esqueleto de um livro daqui a dois anos.</li>
+      </ol>
+      <p>O ângulo que nenhum concorrente domina: <strong>canais de culinária tratam a receita como produto final; aqui a receita é a evidência de outra coisa.</strong> Comida é o que sobra de uma pessoa quando o resto já foi.</p>
+    </div>
+  </section>
+
+  <!-- ============ 3. 90 DIAS ============ -->
+  <section id="noventa">
+    <div class="sec-head">
+      <div class="stamp-num">3</div>
+      <div>
+        <p class="eyebrow">Prompt 3 · Roteiro de conteúdo</p>
+        <h2>Calendário de 90 dias</h2>
+      </div>
+    </div>
+
+    <div class="col">
+      <p>Doze vídeos longos em treze semanas — uma semana de folga proposital, porque calendário sem margem é calendário que quebra. A proporção é <strong>5 de prioridade SEO e 7 de prioridade viral</strong>: o SEO segura o piso de visualizações quando o vídeo narrativo não estoura, e o narrativo levanta o teto quando estoura.</p>
+
+      <div class="callout">
+        <p class="eyebrow">Aviso sobre os títulos SEO</p>
+        <p>Os termos de busca abaixo são <strong>hipóteses, não dados</strong>. Nenhum número de volume foi inventado aqui de propósito. Antes de gravar, cada palavra-chave precisa passar por uma verificação real de volume e dificuldade — e a preferência deve ser sempre por <em>cauda longa</em>. Um canal novo não ganha de "pão caseiro"; ganha de "pão caseiro sem sova sem batedeira".</p>
+      </div>
+    </div>
+
+    <div class="scroller">
+      <table>
+        <thead>
+          <tr>
+            <th>Sem.</th><th>Título</th><th>Pilar</th><th>Prioridade</th><th>Conceito de gancho / palavra-chave</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td class="num">01</td><td class="t-title">Receitas de estranhos: as primeiras cartas que abri</td><td>A Carta</td><td><span class="pill pill-viral">Viral</span></td><td>Abrir envelopes lacrados em cena, sem explicar antes. O formato se revela sozinho.</td></tr>
+          <tr><td class="num">02</td><td class="t-title">Kibe cru: a receita que uma síria me mandou por carta</td><td>Cozinha Aberta</td><td><span class="pill pill-seo">SEO</span></td><td>"kibe cru" na frente. Prato buscado, origem que ninguém associa a uma carta.</td></tr>
+          <tr><td class="num">03</td><td class="t-title">Pão caseiro sem sova: a receita da carta nº 3</td><td>Cozinha Aberta</td><td><span class="pill pill-seo">SEO</span></td><td>"pão caseiro sem sova" é cauda longa forte e o preparo é visualmente lento — bom para retenção.</td></tr>
+          <tr><td class="num">04</td><td class="t-title">A carta que eu não consegui ler até o fim</td><td>A Carta</td><td><span class="pill pill-viral">Viral</span></td><td>Lacuna de curiosidade pura: o que estava escrito e por que ela parou. Emoção real, não encenada.</td></tr>
+          <tr><td class="num">05</td><td class="t-title">Bolo de fubá cremoso: a receita de uma carta de Minas</td><td>Cozinha Aberta</td><td><span class="pill pill-seo">SEO</span></td><td>Termo de busca alto e recorrente. O vídeo de piso do trimestre.</td></tr>
+          <tr><td class="num">06</td><td class="t-title">Todo país tem um prato de despedida. Este é o meu.</td><td>Raiz</td><td><span class="pill pill-viral">Viral</span></td><td>Afirmação improvável seguida de prova cultural, país por país. Vira debate no comentário.</td></tr>
+          <tr><td class="num">07</td><td class="t-title">Nhoque de batata: uma nonna me ditou a receita</td><td>Cozinha Aberta</td><td><span class="pill pill-seo">SEO</span></td><td>"nhoque de batata" + ângulo de carta ditada em áudio, não escrita. Diferencia de 500 tutoriais iguais.</td></tr>
+          <tr><td class="num">08</td><td class="t-title">Cozinhei o prato que 200 pessoas me pediram</td><td>Correspondência</td><td><span class="pill pill-viral">Viral</span></td><td>Prova de demanda pública. Mostra que existe gente do outro lado — recruta remetentes.</td></tr>
+          <tr><td class="num">09</td><td class="t-title">Arroz de carreteiro: a carta de um caminhoneiro</td><td>Cozinha Aberta</td><td><span class="pill pill-seo">SEO</span></td><td>Busca sólida + personagem inesperado. Amplia a persona para além do público feminino.</td></tr>
+          <tr><td class="num">10</td><td class="t-title">Ela me mandou a receita antes de parar de cozinhar</td><td>A Carta</td><td><span class="pill pill-viral">Viral</span></td><td>Episódio de pico emocional do trimestre. Só vai ao ar com consentimento explícito por escrito.</td></tr>
+          <tr><td class="num">11</td><td class="t-title">Abri 100 cartas. Estas cinco me quebraram.</td><td>Correspondência</td><td><span class="pill pill-viral">Viral</span></td><td>Compilação de alta retenção que também funciona como vitrine do formato para quem nunca viu o canal.</td></tr>
+          <tr><td class="num">12</td><td class="t-title">90 dias de cartas: o que todo mundo escreve</td><td>Raiz</td><td><span class="pill pill-viral">Viral</span></td><td>Consolidação. Transforma três meses de episódios em uma tese — e é o vídeo que responde "por que me inscrever".</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="col">
+      <h3>Frequência sustentável</h3>
+      <div class="card">
+        <p><strong>1 vídeo longo por semana + 2 Shorts por semana.</strong> Publicação fixa: longo na quinta às 19h, Shorts na terça e no sábado.</p>
+        <p>Isso só é sustentável com <strong>gravação em lote obrigatória</strong>: um dia de gravação a cada três semanas, três episódios por dia. Os Shorts saem inteiros das sobras desse mesmo dia — nunca são uma produção separada.</p>
+        <p><em>Se em algum momento o lote não acontecer</em>, a regra é cair para três vídeos por mês e manter, jamais publicar dois numa semana e sumir na seguinte. O algoritmo perdoa ritmo lento; não perdoa ritmo imprevisível.</p>
+      </div>
+
+      <h3>Progressão de autoridade</h3>
+      <p>Os doze vídeos não são doze tentativas soltas. Cada bloco constrói uma coisa específica que o bloco seguinte usa.</p>
+    </div>
+
+    <div class="scroller">
+      <table>
+        <thead>
+          <tr><th>Bloco</th><th>Vídeos</th><th>O que este bloco constrói</th><th>Como o próximo usa isso</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="t-title">Fundação<br><span class="num">sem. 1–4</span></td>
+            <td class="num">01 – 04</td>
+            <td>Define o formato até ficar reconhecível em dez segundos, e prova que as cartas são reais. O vídeo 04 é o primeiro teste de que a emoção sustenta retenção.</td>
+            <td>Sem formato reconhecível, nenhum vídeo de busca converte espectador em inscrito.</td>
+          </tr>
+          <tr>
+            <td class="t-title">Tração<br><span class="num">sem. 5–8</span></td>
+            <td class="num">05 – 08</td>
+            <td>Ganha as primeiras entradas por busca e prova competência técnica na cozinha — o público precisa acreditar que ela sabe cozinhar, não só contar histórias. O vídeo 08 mostra publicamente que existe demanda.</td>
+            <td>Competência conquistada aqui é o que permite ousar no bloco seguinte sem parecer sensacionalismo.</td>
+          </tr>
+          <tr>
+            <td class="t-title">Autoridade<br><span class="num">sem. 9–12</span></td>
+            <td class="num">09 – 12</td>
+            <td>Amplia a persona para além do público inicial, atinge o pico emocional do trimestre e converte tudo em identidade coletiva: não é mais um canal, é um arquivo com participação.</td>
+            <td>Entra no trimestre seguinte com catálogo, cartas acumuladas e um motivo declarado para se inscrever.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ============ 4. ROTEIRO ============ -->
+  <section id="roteiro">
+    <div class="sec-head">
+      <div class="stamp-num">4</div>
+      <div>
+        <p class="eyebrow">Prompt 4 · Roteiro completo</p>
+        <h2>Vídeo 01 — roteiro de gravação</h2>
+      </div>
+    </div>
+
+    <div class="col">
+      <p><strong>Título:</strong> Receitas de estranhos: as primeiras cartas que abri &nbsp;·&nbsp; <strong>Duração alvo:</strong> 10 minutos &nbsp;·&nbsp; <strong>Público:</strong> a persona primária — mulher que cozinha por obrigação e assiste vídeo de comida para ter companhia.</p>
+      <p><em>Escolhi roteirizar o vídeo 01 porque é o que ela vai gravar primeiro e é o único que precisa fazer três coisas ao mesmo tempo: prender, explicar o formato e pedir cartas.</em></p>
+    </div>
+
+    <div class="script">
+
+      <div class="beat">
+        <div class="tc">0:00–0:12<span>Gancho</span></div>
+        <div>
+          <p class="vo">"Esta carta veio de uma cidade que eu não sei pronunciar. Tem uma receita escrita à mão aqui dentro — e uma frase que eu vou carregar pelo resto da vida. Eu não vou te contar quem escreveu. Nunca vou."</p>
+          <p class="dir">Corte a frio, sem vinheta, sem "oi gente". Plano fechado nas mãos segurando um envelope <strong>ainda lacrado</strong>, selo estrangeiro visível. A lacuna de curiosidade abre no segundo 4: existe uma frase, e ela não vai ser dita agora.</p>
+        </div>
+      </div>
+
+      <div class="beat">
+        <div class="tc">0:12–0:40<span>Promessa</span></div>
+        <div>
+          <p class="vo">"Eu pedi receitas para estranhos do mundo inteiro. Chegaram estas. Nos próximos dez minutos eu abro três delas, cozinho uma do zero exatamente como está escrito, e no fim eu te conto a única coisa que apareceu em todas as cartas que eu recebi. Sem exceção. Eu não esperava por essa."</p>
+          <p class="dir">Corte para plano aberto da mesa coberta de cartas. Aqui a promessa fica explícita e o gancho de retenção do fim do vídeo é plantado — a "única coisa" só é revelada aos 8 minutos.</p>
+        </div>
+      </div>
+
+      <div class="beat">
+        <div class="tc">0:40–2:20<span>Problema</span></div>
+        <div>
+          <p class="vo">"No ano passado eu fui procurar o caderno de receitas da minha avó. Achei. A letra dela estava lá, inteira. E eu não consegui fazer o bolo. Porque a receita dizia: <em>sal a gosto</em>. Gosto de quem? O gosto era dela. E o gosto dela foi embora junto."</p>
+          <p class="vo">"Aí eu fiz o que todo mundo faz: abri o YouTube. Achei quatrocentos vídeos daquele bolo. Nenhum era sobre ela. Eram todos ótimos, rápidos, bonitos — e nenhum me devolveu nada."</p>
+          <p class="vo">"E eu percebi uma coisa meio triste: a gente cozinha todo dia e não conta isso pra ninguém. A comida virou tarefa. E quando alguém da nossa família morre, some junto uma receita que ninguém anotou."</p>
+          <p class="dir">Cozinha, luz baixa, sem música nos primeiros 30 segundos — o silêncio faz o espectador se aproximar. Inserts do caderno real, letra manuscrita em close. <strong>A dor tem que ser dela, não uma generalização.</strong> Se ela disser "todos nós perdemos receitas", morre. Se disser "eu não consegui fazer o bolo", pega.</p>
+        </div>
+      </div>
+
+      <div class="beat">
+        <div class="tc">2:20–3:20<span>Solução</span></div>
+        <div>
+          <p class="vo">"Então eu fiz o contrário de um canal de receitas. Em vez de eu te ensinar, eu abri uma caixa postal e pedi para você me ensinar."</p>
+          <p class="vo">"Funciona assim: qualquer pessoa, de qualquer lugar do mundo, me manda três coisas — a receita, de onde ela vem, e por que ela importa. Eu não publico nome. Não publico cidade exata. Não publico foto. Nunca. Eu leio, pesquiso de onde aquilo veio, cozinho exatamente como está escrito, provo na frente da câmera, e no fim eu respondo pra quem escreveu."</p>
+          <p class="vo">"Cada carta que chega vira uma ficha numerada nesta caixa. Esta caixa vai crescer em todo vídeo deste canal."</p>
+          <p class="dir">Prático e concreto, nada de abstração. Mostrar fisicamente: a caixa, as fichas, a numeração. É aqui que o mecanismo único vira imagem — o espectador precisa <em>ver</em> o arquivo, não ouvir sobre ele.</p>
+        </div>
+      </div>
+
+      <div class="beat">
+        <div class="tc">3:20–7:40<span>Corpo — as três cartas</span></div>
+        <div>
+          <h4>Carta nº 1 — 50s</h4>
+          <p class="dir">Abre o envelope em cena. Lê um trecho em voz alta, sem interromper. Mapa simples na tela marcando a região. Um comentário de contexto curto e nada mais — a carta se sustenta sozinha.</p>
+          <h4>Carta nº 2 — 50s</h4>
+          <p class="dir">Mesma estrutura, tom contrastante com a primeira (se a nº 1 for triste, a nº 2 é engraçada). Contraste é o que impede o vídeo de virar um bloco emocional único e cansativo.</p>
+          <h4>Carta nº 3 — a que ela cozinha — 2min30</h4>
+          <p class="dir">Preparo integral seguindo a carta ao pé da letra, inclusive onde a carta é vaga. Quando ela esbarrar numa instrução imprecisa, faz o retorno ao problema do início: <em>"olha ele aqui de novo — 'até dar o ponto'. Que ponto?"</em> Esse retorno amarra o vídeo inteiro. Termina provando o prato em plano fixo, sem corte, reação real. <strong>Se não estiver bom, ela diz que não está bom.</strong> Honestidade na prova é o que separa este canal de conteúdo publicitário.</p>
+        </div>
+      </div>
+
+      <div class="beat">
+        <div class="tc">7:40–9:10<span>3 aprendizados</span></div>
+        <div>
+          <p class="vo"><strong>1 — "Ninguém me mandou a receita mais gostosa que conhece. Todo mundo me mandou a receita da pior época da vida."</strong> Comida não marca festa. Marca crise: a sopa da internação, o arroz do primeiro mês fora de casa, o bolo do velório.</p>
+          <p class="vo"><strong>2 — "A receita é sempre curta. A história é sempre longa."</strong> As pessoas escrevem quatro linhas de ingredientes e duas páginas de contexto. O prato não é o assunto — é o endereço onde a memória mora.</p>
+          <p class="vo"><strong>3 — "Em todas as cartas, sem exceção, aparece outra pessoa."</strong> Ninguém mandou uma receita que inventou sozinho. Toda receita é herdada de alguém. É a coisa que eu não esperava — e é o motivo deste canal existir.</p>
+          <p class="dir">O aprendizado 3 é a entrega da promessa feita aos 0:40. Falar olhando na câmera, sem inserts, sem música por baixo. Momento mais parado do vídeo de propósito.</p>
+        </div>
+      </div>
+
+      <div class="beat">
+        <div class="tc">9:10–9:45<span>CTA única</span></div>
+        <div>
+          <p class="vo">"Se você chegou até aqui, é porque tem uma receita dessas. Manda pra mim. O endereço está aqui embaixo. Três coisas: a receita, de onde ela é, e por que ela importa pra você. Seu nome não vai aparecer em lugar nenhum, e eu respondo todo mundo. Não precisa ser uma receita boa. Precisa ser uma receita sua."</p>
+          <p class="dir"><strong>Um único pedido.</strong> Nada de curtir, se inscrever, comentar e ativar o sininho na mesma respiração — pedido múltiplo é pedido ignorado. Se o formato funcionar, a inscrição vem por consequência. Link fixado no primeiro comentário e no primeiro item da descrição.</p>
+        </div>
+      </div>
+
+      <div class="beat">
+        <div class="tc">9:45–10:05<span>Teaser</span></div>
+        <div>
+          <p class="vo">"A carta nº 4 é a mais difícil que eu já recebi. Quem escreveu não pode mais comer o prato que me mandou — e me pediu para eu comer no lugar dela. Quinta que vem."</p>
+          <p class="dir">Corte seco para tela final com o próximo vídeo. Nada de despedida longa; a última coisa que o espectador ouve é um motivo para voltar.</p>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ============ 5. SEO ============ -->
+  <section id="seo">
+    <div class="sec-head">
+      <div class="stamp-num">5</div>
+      <div>
+        <p class="eyebrow">Prompt 5 · SEO e thumbnail</p>
+        <h2>Otimização do vídeo 01</h2>
+      </div>
+    </div>
+
+    <div class="col">
+      <h3>Título</h3>
+      <div class="letter">
+        <p>Receitas de estranhos: as primeiras cartas que abri</p>
+      </div>
+      <p><span class="mono">51 caracteres</span> — dentro do limite de 60, com a palavra-chave principal ("receitas de estranhos") na frente. O termo é de baixa concorrência e alta especificidade: quem digita isso quer exatamente este vídeo, e o canal pode dominar essa busca inteira em semanas.</p>
+
+      <h3>Três conceitos de thumbnail</h3>
+      <p>Cada um puxa um gatilho emocional diferente, para que o teste A/B compare coisas de verdade distintas e não três versões da mesma ideia.</p>
+    </div>
+
+    <div class="grid">
+      <div class="card">
+        <p class="eyebrow" style="color:var(--blue)">Gatilho: curiosidade</p>
+        <h4 style="margin-top:0">O envelope lacrado</h4>
+        <p>Envelope fechado em close nas mãos dela, selo estrangeiro nítido, fundo escuro e desfocado. Rosto cortado pela borda superior — presente, mas não protagonista.</p>
+        <p><strong>Texto:</strong> <span class="mono">CARTA Nº 1</span></p>
+        <p style="font-size:14.5px;color:var(--ink-soft)">Aposta na lacuna: o que tem dentro?</p>
+      </div>
+      <div class="card">
+        <p class="eyebrow" style="color:var(--blue)">Gatilho: empatia</p>
+        <h4 style="margin-top:0">A reação dela</h4>
+        <p>Rosto da Michelle em close, no meio da leitura, expressão contida — não lágrima escorrendo. Papel manuscrito desfocado em primeiro plano.</p>
+        <p><strong>Texto:</strong> <span class="mono">EU NÃO CONSEGUI TERMINAR</span></p>
+        <p style="font-size:14.5px;color:var(--ink-soft)">O texto é sobre a reação dela, nunca sobre a dor do remetente. Emoção sim, exploração não.</p>
+      </div>
+      <div class="card">
+        <p class="eyebrow" style="color:var(--blue)">Gatilho: escala</p>
+        <h4 style="margin-top:0">A mesa inteira</h4>
+        <p>Plano de cima: mesa coberta por dezenas de cartas espalhadas, um único prato pronto no centro, mãos entrando pela borda do quadro.</p>
+        <p><strong>Texto:</strong> <span class="mono">O MUNDO INTEIRO ESCREVEU</span></p>
+        <p style="font-size:14.5px;color:var(--ink-soft)">Comunica volume e ambição do projeto em meio segundo.</p>
+      </div>
+    </div>
+
+    <div class="col">
+      <h3>Descrição completa</h3>
+      <pre>Eu pedi receitas para estranhos do mundo inteiro e recebi cartas
+manuscritas de gente que eu nunca vou conhecer. Neste primeiro
+episódio do Carta à Mesa eu abro as três primeiras, cozinho uma
+delas exatamente como está escrito e conto a única coisa que
+apareceu em todas as cartas que chegaram até agora.
+
+Nenhum nome, nenhuma cidade exata, nenhuma foto. Toda receita
+aqui é real e foi enviada por uma pessoa de verdade.
+
+📮 MANDE A SUA CARTA
+Três coisas: a receita, de onde ela vem, e por que ela importa
+para você. Seu nome nunca aparece.
+→ [link do formulário]
+
+⏱ CAPÍTULOS
+00:00  A carta que eu não sei de onde veio
+00:12  O que você vai ver neste vídeo
+00:40  Por que eu não consegui fazer o bolo da minha avó
+02:20  Como funciona o Carta à Mesa
+03:20  Carta nº 1
+04:10  Carta nº 2
+05:00  Carta nº 3 — cozinhando o que ela escreveu
+07:40  Três coisas que eu aprendi lendo as cartas
+09:10  Como mandar a sua
+09:45  A carta nº 4
+
+Um canal sobre receitas de família, comida afetiva e as histórias
+que vêm junto com elas. Receitas anônimas do mundo inteiro,
+cozinhadas do jeito que foram escritas — com a bagunça, a
+imprecisão e a memória de quem escreveu.
+
+Episódios novos toda quinta, 19h.</pre>
+      <p><em>Nota:</em> só os primeiros 200 caracteres da descrição aparecem na busca e no card do vídeo — por isso a palavra-chave e a promessa inteira estão nas duas primeiras linhas, e o link do formulário vem logo depois. Os timestamps precisam bater com o corte final antes de publicar, senão o YouTube ignora os capítulos.</p>
+
+      <h3>Dez tags</h3>
+      <div class="tags">
+        <span class="tag">receitas</span>
+        <span class="tag">culinária</span>
+        <span class="tag">comida</span>
+        <span class="tag">receitas de família</span>
+        <span class="tag">receita da vovó</span>
+        <span class="tag">comida afetiva</span>
+        <span class="tag">receitas do mundo</span>
+        <span class="tag">cartas de estranhos</span>
+        <span class="tag">histórias reais de comida</span>
+        <span class="tag">receita manuscrita de família</span>
+      </div>
+      <p>Três termos amplos, sete de cauda longa. <strong>Sendo honesto:</strong> tags hoje têm peso pequeno no ranqueamento do YouTube — servem principalmente para desambiguar grafia e termo. O que realmente decide a descoberta deste vídeo é, nesta ordem: retenção nos primeiros 30 segundos, taxa de clique da thumbnail, título e as duas primeiras linhas da descrição. Preencher tags é higiene, não estratégia.</p>
+
+      <h3>Testes A/B da thumbnail</h3>
+      <ol>
+        <li><strong>Primeira rodada — qual gatilho vence.</strong> Envelope lacrado (curiosidade) contra mesa inteira (escala), usando o teste nativo do YouTube com as três variações. São ideias opostas, então o resultado ensina alguma coisa de verdade.</li>
+        <li><strong>Segunda rodada — rosto ou não.</strong> A vencedora com e sem o rosto da Michelle no quadro. Em canal narrativo o rosto costuma ajudar; em canal de objeto costuma atrapalhar. Este é os dois, então precisa ser medido.</li>
+        <li><strong>Terceira rodada — o texto.</strong> Mesma imagem, três textos: <span class="mono">CARTA Nº 1</span> / <span class="mono">DE UM ESTRANHO</span> / sem texto nenhum. Thumbnail sem texto é rara e chama atenção justamente por isso.</li>
+        <li><strong>Quarta rodada — enquadramento.</strong> Close extremo no selo contra plano médio do envelope inteiro. Em celular, quanto mais fechado, melhor — mas fechado demais vira mancha.</li>
+      </ol>
+      <div class="callout">
+        <p class="eyebrow">Ressalva metodológica</p>
+        <p>Teste A/B com pouco tráfego não conclui nada. Com um canal novo, a diferença entre 4% e 5% de clique em 300 impressões é ruído, não resultado. A recomendação é <strong>não trocar thumbnail por impulso nas duas primeiras semanas</strong> e só tratar um teste como decidido depois de alguns milhares de impressões por variação. Até lá, escolher a mais forte e deixar quieto.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 6. PRÉ-REQUISITOS ============ -->
+  <section id="antes">
+    <div class="sec-head">
+      <div class="stamp-num">6</div>
+      <div>
+        <p class="eyebrow">Antes de gravar</p>
+        <h2>Partida a frio e regras da casa</h2>
+      </div>
+    </div>
+
+    <div class="col">
+      <h3>Como conseguir as primeiras cartas sem ter audiência</h3>
+      <p>Isso precisa acontecer antes do vídeo 01 ir ao ar. Meta: <strong>10 cartas reais na mão</strong>, o que dá quase três meses de folga.</p>
+      <ul>
+        <li>Grupos de brasileiros no exterior — Portugal, Irlanda, Japão, Estados Unidos. É o público mais disposto a escrever sobre comida e memória que existe.</li>
+        <li>Comunidades de imigrantes e refugiados no Brasil: associações, cursos de português, centros culturais. Um pedido bem escrito num grupo desses rende mais do que mil impressões pagas.</li>
+        <li>A rede pessoal, pedindo explicitamente que <em>repassem para alguém que ela não conhece</em> — o segundo grau é onde o estranho aparece.</li>
+        <li>Fóruns e comunidades online de culinária e de cidades específicas, sempre com pedido honesto e sem link disfarçado.</li>
+        <li>Casas de repouso, projetos de história oral, professores de idiomas com alunos estrangeiros.</li>
+      </ul>
+
+      <h3>Regras que protegem o mecanismo</h3>
+      <div class="card">
+        <ul style="margin-bottom:0">
+          <li><strong>Nunca escrever uma carta.</strong> Se um dia faltar material, o episódio é adiado — não fabricado. E se a Michelle mandar a própria carta, ela diz na cara que é dela. A credibilidade é o ativo inteiro; ela não se recupera depois de perdida.</li>
+          <li><strong>Consentimento por escrito no formulário.</strong> Uma caixa de seleção autorizando a leitura no ar em formato anonimizado, e o original guardado. Isso protege a Michelle e protege quem escreveu.</li>
+          <li><strong>Anonimização de verdade:</strong> sem nome, sem cidade pequena identificável, sem detalhe único que entregue a pessoa. Região e país bastam.</li>
+          <li><strong>Assunto sensível não vira isca.</strong> Luto, doença e violência podem estar no episódio — nunca no texto da thumbnail. O gancho pode ser a reação da Michelle; nunca a dor de quem escreveu.</li>
+          <li><strong>Responder todo mundo</strong>, mesmo quem não vira episódio. É o que faz a segunda carta chegar.</li>
+        </ul>
+      </div>
+
+      <h3>As três primeiras coisas a fazer</h3>
+      <ol>
+        <li>Abrir o formulário de cartas e o e-mail do canal — hoje, antes de qualquer produção. A caixa precisa estar recebendo enquanto o resto é construído.</li>
+        <li>Validar de verdade as palavras-chave dos cinco vídeos de SEO antes de gravar, com dados reais de volume e dificuldade, trocando qualquer termo que se revele competitivo demais por uma variação de cauda longa.</li>
+        <li>Sair atrás das dez primeiras cartas. Nada mais importa até isso estar resolvido — nem nome, nem logo, nem equipamento.</li>
+      </ol>
+    </div>
+  </section>
+
+  <footer class="col">
+    <p>Documento de estratégia · Carta à Mesa · agosto de 2026. Os termos de busca citados são hipóteses a validar com dados reais antes da gravação; nenhum volume de busca foi estimado neste documento.</p>
+  </footer>
+
+</div>
