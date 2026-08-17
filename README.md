@@ -12,6 +12,50 @@ no marketplace. The whole product exists to shorten the distance between
 Discover → Analyze → Score → Select → Build → Publish → Measure → Scale or Kill
 ```
 
+> **This repository ships with no credentials of any kind.** Every deployment —
+> including the one you are looking at right now — connects to your own Supabase
+> project and your own DataForSEO account. See
+> [Running your own instance](#running-your-own-instance) below.
+
+---
+
+## Running your own instance
+
+Three accounts, none of them shared with anyone else's deployment:
+
+| Account | Required? | What it gives you |
+| --- | --- | --- |
+| [Supabase](https://supabase.com) | Yes, for real use | Your database and login. Free tier is enough to start. |
+| [DataForSEO](https://app.dataforseo.com) | Optional | Real search volume, CPC and SERP data. Without it the app still runs — Research and "refresh from provider" just report themselves unconfigured. |
+| [Anthropic](https://console.anthropic.com) | Optional | AI opportunity analysis. Without it, that tab shows a configuration state instead of an analysis. |
+
+Nothing runs against demo/shared infrastructure. Skip every account above and the
+app still works, seeded with clearly-labelled fictional data — that's
+[local demo mode](#quick-start), meant for trying the interface before you commit
+to setting anything up.
+
+**To go from a fork to your own working copy:**
+
+1. Fork or clone this repository.
+2. Create your own Supabase project and apply the migrations — full walkthrough
+   in [Supabase setup](#supabase-setup).
+3. Copy `.env.example` to `.env.local` and fill in the values from your own
+   accounts — see [Environment variables](#environment-variables) for exactly
+   what each one does and where to find it. **Never commit `.env.local`** — it's
+   already gitignored, and that's what keeps your keys off GitHub.
+4. `npm install && npm run dev`, and open `/login` to create your operator
+   account.
+5. Deploying somewhere public (Vercel, or anywhere else)? The build reads
+   environment variables the same way — set them in your host's dashboard, not
+   in the repository. On Vercel specifically: environment variables are baked in
+   at build time, so set them *before* the first deploy, or redeploy afterwards
+   if you add them later.
+
+If a step above assumes something your setup doesn't have, the app is built to
+say so rather than guess: every provider reports its own configuration status,
+and a production deploy without Supabase configured shows a persistent banner
+rather than quietly running on borrowed time.
+
 ---
 
 ## The two rules everything else follows from
@@ -105,6 +149,10 @@ activity log.
 ---
 
 ## Environment variables
+
+Every value below is one you supply from your own accounts — nothing in this
+repository, including `.env.example`, contains a real key or password. Get each
+one from the linked dashboard, not from anyone else's setup.
 
 | Variable | Required | Purpose |
 | --- | --- | --- |
